@@ -85,7 +85,6 @@ Firmware SAFETY Features:
 Pumps will not turn on if no valves are open at that time. 
 Likewise, turning off all valves (including flush valve) will automatically shut off pumps
   
-
 */
 
 #include <Wire.h> // i2c connection for RTC DS3231
@@ -94,6 +93,8 @@ Likewise, turning off all valves (including flush valve) will automatically shut
 #include <EEPROM.h>     // Will be writing params to non-volatile memory to save between uses
 #include "EEPROMAnything.h" // EEPROM read/write functions
 #include <SPI.h>        // Using SPI hardware to communicate with TPICs
+
+#define NUM_PHONES 30 // Max number of phone numbers to store in configuration
 
 const byte eepromValidationValue = 99; // Value to test to see if EEPROM has been written before
 // Determine Sampler "Factory Default" behaviour. These can be changed and saved using the SerialCommandDefs (see tab with same label)
@@ -138,8 +139,7 @@ struct config_t
   uint8_t VNum;  // Current Valve number sampled, 0=reset/default
   byte written;  // Has the EEPROM Memory been written before?
   bool Is_Daily; // alarm mode set 1 for daily sample, 0 for periodic sample?
-//  bool Is_Period;
-
+  char phones[NUM_PHONES][16]; // Phone numbers for SMS status update recipients
 } configuration;
 
 //----------------------------
@@ -199,7 +199,7 @@ void setup() {
     Serial.println(F("Couldn't find RTC"));
     while (1);
   }
-  
+
 // This may end up causing a problem in practice - what if RTC looses power in field? Shouldn't happen with coin cell batt backup
   if (RTC.lostPower()) {
     Serial.println(F("RTC lost power, lets set the time!"));
@@ -259,7 +259,7 @@ if(timerEN)
   {
     Serial.println(F("Total number of samples reached!"));
     Serial.println(F("Sleeping forever, bye!"));
-    // warning, because wakeup pin is dissabled above, sleep forever, no wakeup from here
+    // warning, because wakeup pin is disabled above, sleep forever, no wakeup from here
     sleepEN = true; // Set sleep flag to sleep at end of loop 
   }
   else
@@ -464,13 +464,16 @@ void writeEEPROMdefaults()
   configuration.VNum = SampleValveNumDef;
   configuration.written = 0;
   configuration.Is_Daily = 1; // set daily flag in configuration
-//  configuration.Is_Hourly = 0; // clear hourly flag in configuration
+
+  for (int i = 0; i < NUM_PHONES; i++) {
+    configuration.phones[i][0] = '\0';
+  }
 
   // Save Defaults into EEPROM
   EEPROM_writeAnything(0, configuration);
   
 // set RTC timer here:
-   RTC.setAlarm(ALM1_MATCH_HOURS, configuration.SAMin, configuration.SAHr, 0);
+  RTC.setAlarm(ALM1_MATCH_HOURS, configuration.SAMin, configuration.SAHr, 0);
   Serial.println(F("Done"));
   // Allow wake up pin to trigger interrupt on low.
   attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
