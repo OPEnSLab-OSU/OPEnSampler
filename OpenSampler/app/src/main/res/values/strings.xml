@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">OpenSampler Companion App</string>
 
-
+    <string-array name="schedItems">
+        <item>Periodic</item>
+        <item>Daily</item>
+        <item>Custom</item>
+    </string-array>
 
 </resources>

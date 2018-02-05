@@ -10,9 +10,7 @@ import opensampler.opensampler.samples.SamplesFragment;
 import opensampler.opensampler.schedule.ScheduleFragment;
 
 public class MainActivity extends AppCompatActivity {
-
     private static final String TAG = "MainActivity";
-
     private SectionStatePagerAdapter mSectionsStatePagerAdapter;
     private ViewPager mViewPager;
 
@@ -21,14 +19,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Log.d(TAG, "onCreate: Started.");
-
         mSectionsStatePagerAdapter = new SectionStatePagerAdapter(getSupportFragmentManager());
-
         mViewPager = (ViewPager) findViewById(R.id.container);
-
         setupViewPager(mViewPager);
-
     }
+
     private void setupViewPager(ViewPager viewPager){
         SectionStatePagerAdapter adapter = new SectionStatePagerAdapter(getSupportFragmentManager());
         adapter.addFragment(new ConnectionFragment(), "ConnectionFragment");
@@ -41,4 +36,3 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.setCurrentItem(fragmentNumber);
     }
 }
-
