@@ -1,3 +1,5 @@
+#pragma once
+
 #include <EEPROM.h>
 #include <Arduino.h>  // for type definitions
 
