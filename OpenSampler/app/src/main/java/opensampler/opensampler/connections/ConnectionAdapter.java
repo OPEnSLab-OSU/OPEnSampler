@@ -13,8 +13,6 @@ import opensampler.opensampler.R;
  * Created by Godtop on 1/24/2018.
  */
 
-
-
 public class ConnectionAdapter extends RecyclerView.Adapter<ConnectionAdapter.ViewHolder>{
     private static final String TAG = "ConnectionAdapter";
 
@@ -54,7 +52,6 @@ public class ConnectionAdapter extends RecyclerView.Adapter<ConnectionAdapter.Vi
             });
             textView = (TextView) view.findViewById(R.id.tv_connect_text);
         }
-
         public TextView getTextView(){
             return textView;
         }

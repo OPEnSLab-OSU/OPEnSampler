@@ -8,4 +8,9 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+
+    <style name="menuItem">
+        <item name="android:textSize">20sp</item>
+    </style>
+
 </resources>

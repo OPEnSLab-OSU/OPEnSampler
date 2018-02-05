@@ -50,7 +50,7 @@ public class ConnectionFragment extends Fragment {
     private void initDataset() {
             mDataset = new String[count];
             for (int i = 0; i < count; i++) {
-                mDataset[i] = "This is connection #" + i;
+                mDataset[i] = "Known connection #" + i;
             }
     }
 	
