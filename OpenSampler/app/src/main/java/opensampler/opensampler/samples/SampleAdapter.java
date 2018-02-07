@@ -13,15 +13,18 @@ import opensampler.opensampler.R;
  * Created by Godtop on 1/24/2018.
  */
 
-
-
 public class SampleAdapter extends RecyclerView.Adapter<SampleAdapter.ViewHolder>{
     private static final String TAG = "SampleAdapter";
-
+    private OnSearchResultClickListener mSearchResultClickListener;
     private String[] mDataSet;
 
-    public SampleAdapter(String[] dataSet){
+    public SampleAdapter(OnSearchResultClickListener clickListener, String[] dataSet){
+        mSearchResultClickListener = clickListener;
         mDataSet = dataSet;
+    }
+
+    public interface OnSearchResultClickListener{
+        void onSampleElementClick();
     }
 
     @Override
@@ -41,25 +44,22 @@ public class SampleAdapter extends RecyclerView.Adapter<SampleAdapter.ViewHolder
         return mDataSet.length;
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder{
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         private final TextView textView;
 
         public ViewHolder(View view){
             super(view);
-            view.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.d(TAG, "Element " + getAdapterPosition() + " clicked.");
-                }
-            });
             textView = (TextView) view.findViewById(R.id.tv_sample_text);
+            view.setOnClickListener(this);
         }
-
         public TextView getTextView(){
             return textView;
         }
 
+        @Override
+        public void onClick(View v) {
+            Log.d(TAG, "View Clicked");
+            mSearchResultClickListener.onSampleElementClick();
+        }
     }
-
-
 }
