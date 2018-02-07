@@ -37,7 +37,6 @@ public class ScheduleFragment extends Fragment {
     private Spinner schedMenu;
     private String mParam1;
 
-
 	private enum LayoutManagerType {
 		GRID_LAYOUT_MANAGER,
         LINEAR_LAYOUT_MANAGER
@@ -70,7 +69,6 @@ public class ScheduleFragment extends Fragment {
         startingHour.setText(startHour);
     }
 
-
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState){
         View view = inflater.inflate(R.layout.schedule_frag, container, false);
 
@@ -83,7 +81,6 @@ public class ScheduleFragment extends Fragment {
         btnSetSched = (Button) view.findViewById(R.id.setSchedType);
         schedMenu = (Spinner) view.findViewById(R.id.spinSchedMenu);
         numDays = (EditText) view.findViewById(R.id.numDays);
-
 
         sampleLength = (EditText) view.findViewById(R.id.sampleLength);
         periodLength = (EditText) view.findViewById(R.id.periodLength);

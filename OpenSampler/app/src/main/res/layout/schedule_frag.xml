@@ -199,7 +199,6 @@
         android:layout_height="wrap_content"
         android:text="Send"
         android:layout_below="@+id/sampleLength"
-        android:layout_centerVertical="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
 

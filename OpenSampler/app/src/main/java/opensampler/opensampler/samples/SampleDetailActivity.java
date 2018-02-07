@@ -1,4 +1,4 @@
-package opensampler.opensampler.connections;
+package opensampler.opensampler.samples;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -12,20 +12,20 @@ import opensampler.opensampler.R;
  * Created by Godtop on 2/5/2018.
  */
 
-public class ConnectionDetailActivity extends AppCompatActivity {
-    private TextView mNameActual;
-    private TextView mBlueActual;
-    private TextView mNameLabel;
-    private TextView mBlueLabel;
+public class SampleDetailActivity extends AppCompatActivity {
+    private TextView mSampleActual;
+    private TextView mTimeActual;
+    private TextView mSampleLabel;
+    private TextView mTimeLabel;
     private Button mBackButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.connection_detail);
-        mNameActual = (TextView) findViewById(R.id.nameActual);
-        mBlueActual = (TextView) findViewById(R.id.sampleTimeActual);
-        mBackButton = (Button) findViewById(R.id.connectBackButton);
+        setContentView(R.layout.sample_detail);
+        mTimeActual = (TextView) findViewById(R.id.sampleTimeActual);
+        mSampleActual = (TextView) findViewById(R.id.sampleTimeActual);
+        mBackButton = (Button) findViewById(R.id.sampleBackButton);
         mBackButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -17,19 +17,19 @@ import android.widget.Toast;
 
 import opensampler.opensampler.MainActivity;
 import opensampler.opensampler.R;
+import opensampler.opensampler.schedule.ScheduleFragmentActivity;
 
 /**
  * Created by Godtop on 1/22/2018.
  */
 
-public class ConnectionFragment extends Fragment {
+public class ConnectionFragment extends Fragment implements ConnectionAdapter.OnSearchResultClickListener{
     private static final String TAG = "ConnectionFragment";
     private Button btnNavFrag2;
     private Button btnNavSecondActivity;
     private static final String KEY_LAYOUT_MANAGER = "layoutManager";
     private static final int count = 10;
     private static final int span = 2;
-
 
     private enum LayoutManagerType {
         GRID_LAYOUT_MANAGER,
@@ -47,29 +47,33 @@ public class ConnectionFragment extends Fragment {
         super.onCreate(savedInstanceState);
         initDataset();
     }
+
     private void initDataset() {
             mDataset = new String[count];
             for (int i = 0; i < count; i++) {
                 mDataset[i] = "Known connection #" + i;
             }
     }
-	
+
+    @Override
+    public void onConnectionElementClick(){
+        Log.d("ConnectionFragment", "Before Intent");
+        Intent intent = new Intent(getActivity(), ConnectionDetailActivity.class);
+        Log.d("ConnectionFragment", "Before StartActivity");
+        startActivity(intent);
+    }
+
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.connect_frag, container, false);
         mCurrentLayoutManagerType = LayoutManagerType.LINEAR_LAYOUT_MANAGER;
-
-        mLayoutManager = new LinearLayoutManager(getActivity());
-        mCurrentLayoutManagerType = LayoutManagerType.LINEAR_LAYOUT_MANAGER;
+        btnNavSecondActivity = (Button) view.findViewById(R.id.btnNavSecondActivity);
+        btnNavFrag2 = (Button) view.findViewById(R.id.btnNavFrag2);
         mRecyclerView = (RecyclerView) view.findViewById(R.id.connRecView);
         mLayoutManager = new LinearLayoutManager(getActivity());
 
-        mConnAdapt = new ConnectionAdapter(mDataset);
+        mConnAdapt = new ConnectionAdapter(this, mDataset);
         mRecyclerView.setAdapter(mConnAdapt);
-
-        btnNavFrag2 = (Button) view.findViewById(R.id.btnNavFrag2);
-        btnNavSecondActivity = (Button) view.findViewById(R.id.btnNavSecondActivity);
         Log.d(TAG, "onCreateView: Started.");
-
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.scrollToPosition(0);
         
@@ -87,8 +91,9 @@ public class ConnectionFragment extends Fragment {
                 Intent intent = new Intent(getActivity(), ConnectionActivity.class);
                 startActivity(intent);
             }
-
         });
+
+
         return view;
     }
 

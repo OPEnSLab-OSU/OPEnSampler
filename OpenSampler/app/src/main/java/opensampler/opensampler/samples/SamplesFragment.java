@@ -1,4 +1,5 @@
 package opensampler.opensampler.samples;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -12,14 +13,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
+
 import opensampler.opensampler.MainActivity;
 import opensampler.opensampler.R;
+import opensampler.opensampler.samples.SampleDetailActivity;
 
 /**
  * Created by Godtop on 1/22/2018.
  */
 
-public class SamplesFragment extends Fragment {
+public class SamplesFragment extends Fragment implements SampleAdapter.OnSearchResultClickListener {
     private static final String TAG = "SampleFragment";
     private Button btnNavFrag1;
     private Button btnNavFrag3;
@@ -52,26 +55,30 @@ public class SamplesFragment extends Fragment {
         }
     }
 
+    public void onSampleElementClick(){
+        Log.d(TAG, "Before Intent");
+        Intent intent = new Intent(getActivity(), SampleDetailActivity.class);
+        Log.d(TAG, "Before StartActivity");
+        startActivity(intent);
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState){
         View view = inflater.inflate(R.layout.sample_frag, container, false);
         mCurrentLayoutManagerType = LayoutManagerType.LINEAR_LAYOUT_MANAGER;
-
-        mLayoutManager = new LinearLayoutManager(getActivity());
-        mCurrentLayoutManagerType = LayoutManagerType.LINEAR_LAYOUT_MANAGER;
-        mRecyclerView = (RecyclerView) view.findViewById(R.id.samRecView);
-        mLayoutManager = new LinearLayoutManager(getActivity());
-
-        mSamAdapt = new SampleAdapter(mDataset);
-        mRecyclerView.setAdapter(mSamAdapt);
-        mRecyclerView.setLayoutManager(mLayoutManager);
-        mRecyclerView.scrollToPosition(0);
-
         btnNavFrag1 = (Button) view.findViewById(R.id.btnNavFrag1);
         btnNavFrag3 = (Button) view.findViewById(R.id.btnNavFrag3);
         btnNavSecondActivity = (Button) view.findViewById(R.id.btnNavSecondActivity);
+        mRecyclerView = (RecyclerView) view.findViewById(R.id.samRecView);
+        mLayoutManager = new LinearLayoutManager(getActivity());
+
+        mSamAdapt = new SampleAdapter(this, mDataset);
+        mRecyclerView.setAdapter(mSamAdapt);
         Log.d(TAG, "onCreateView: Started.");
+        mRecyclerView.setLayoutManager(mLayoutManager);
+        mRecyclerView.scrollToPosition(0);
+
         btnNavFrag1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view){
@@ -98,7 +105,6 @@ public class SamplesFragment extends Fragment {
         });
         return view;
     }
-
     public void setRecyclerViewLayoutManager(LayoutManagerType layoutManagerType) {
         int scrollPosition = 0;
         // If a layout manager has already been set, get current scroll position.

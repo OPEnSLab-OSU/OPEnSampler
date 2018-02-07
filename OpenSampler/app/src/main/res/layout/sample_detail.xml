@@ -10,50 +10,48 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginRight="5dp"
         android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
         android:layout_marginTop="10dp"
-        android:textStyle="bold"
+        android:text="Sample Number"
         android:textSize="15dp"
-        android:text="Connection Name:" />
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/sampleTimeLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:text="Other Bluetooth Info:"
-        android:textSize="15dp"
-        android:textStyle="bold"
-        android:layout_below="@+id/sampleNumberLabel"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
+        android:layout_below="@+id/sampleNumberLabel"
         android:layout_marginLeft="5dp"
-        android:layout_marginRight="5dp"/>
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="15dp"
+        android:text="Time Sampled"
+        android:textSize="15dp"
+        android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/nameActual"
+        android:id="@+id/sampleNumberActual"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBaseline="@+id/sampleNumberLabel"
         android:layout_alignBottom="@+id/sampleNumberLabel"
-        android:layout_alignLeft="@+id/sampleTimeActual"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_alignStart="@+id/sampleTimeActual"
-        android:layout_marginRight="5dp" />
+        android:layout_marginRight="5dp"
+        android:layout_alignLeft="@+id/sampleTimeActual" />
 
     <TextView
         android:id="@+id/sampleTimeActual"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="some"
         android:layout_alignTop="@+id/sampleTimeLabel"
-        android:layout_centerHorizontal="true"
-        android:layout_marginRight="5dp"
-        android:text="some" />
+        android:layout_centerHorizontal="true" />
 
     <Button
-        android:id="@+id/connectBackButton"
+        android:id="@+id/sampleBackButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/sampleTimeLabel"
