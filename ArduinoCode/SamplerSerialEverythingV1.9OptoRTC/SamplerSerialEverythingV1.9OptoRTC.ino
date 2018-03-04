@@ -1,39 +1,8 @@
 /*
-  OPEnS Water sampler Firmware Version 1.9
-  Chet Udell, Mitch Nelke, 2017
+  OPEnS Water Sampler
+  Chet Udell, Mitch Nelke, Travis Whitehead
 
-  New in this version:
-  Added re-send courtesy valve signal at periodic rate during sampling because noise from brushed motor may interrupt this signal if sent only once at begining
-  Optomize RTC, "CLK" serial command now expects [ CLK day month year hr min ] for example: CLK 13 6 1983 13 20  will set clock to 13 June 1983 1:20PM
-  Also set next sample alarm at the beginning of each sample cycle instead of at end
-  - so duration of sample does not affect the sample schedule
-  (e.g. a sample period of 10 min will always take place every 10min instead of 10min + [sample time])
-
-    To Do:
-    Add OLED Menu with Buttons to program sampler in-field and see status
-    Add GSM for live updates
-
-SamplerSerialEverythingVx.x is the main Arduino Sketch file. Other dependent tabs include:
-EEPROMAnything.h
-SPIfunctions.ino
-SerialCommandDefs.ino
-ValveAddressing.ino
-
-Dependencies:
-Saving Sampler params in EEPROM, include files from here:
-http://playground.arduino.cc/Code/EEPROMWriteAnything
-
-You may need to download RTCLibExtended:
-https://github.com/FabioCuomo/FabioCuomo-DS3231
-
-And Sparkfun Low Power Library:
-https://github.com/rocketscream/Low-Power/archive/master.zip
-
-RTC and RTCLib-extended tutorial/reference:
-http://www.instructables.com/id/Arduino-Sleep-and-Wakeup-Test-With-DS3231-RTC/
-
-Instructions on how to install library:
-https://learn.sparkfun.com/tutorials/installing-an-arduino-library
+SamplerSerialEverythingVx.x is the main Arduino Sketch file.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
