@@ -7,8 +7,11 @@ The main features include an Arduino-controlled array of solenoid valves to mana
 Check out our blog for updates and more information!
 
 **Blog:** http://www.open-sensing.org/watersamplerblog/
+
 **Fusion 360:** https://www.autodesk.com/products/fusion-360/students-teachers-educators
+
 **OPEnS Lab Website:** http://www.open-sensing.org/
+
 **OPEnS Lab Facebook:** https://www.facebook.com/open.sensing/
 
 ## Dependencies
