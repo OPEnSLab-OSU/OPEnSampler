@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,10 +7,56 @@
     tools:context="opensampler.opensampler.MainActivity">
 
     <android.support.v4.view.ViewPager
-        android:layout_height="match_parent"
-        android:layout_width="match_parent"
-        android:id="@+id/container">
+        android:id="@+id/container"
+        android:layout_width="396dp"
+        android:layout_height="567dp"
+        tools:layout_editor_absoluteX="7dp"
+        tools:layout_editor_absoluteY="6dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@+id/conn">
 
     </android.support.v4.view.ViewPager>
 
-</android.support.constraint.ConstraintLayout>
+    <Button
+        android:id="@+id/conn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="22dp"
+        android:layout_marginStart="22dp"
+        android:text="Connect"
+        android:layout_alignParentBottom="true"
+        android:layout_alignLeft="@+id/container"
+        android:layout_alignStart="@+id/container" />
+
+    <Button
+        android:id="@+id/samp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Samples"
+        android:layout_alignBaseline="@+id/conn"
+        android:layout_alignBottom="@+id/conn"
+        android:layout_toRightOf="@+id/conn"
+        android:layout_toEndOf="@+id/conn" />
+
+    <Button
+        android:id="@+id/sched"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Schedule"
+        android:layout_alignBaseline="@+id/samp"
+        android:layout_alignBottom="@+id/samp"
+        android:layout_toRightOf="@+id/samp"
+        android:layout_toEndOf="@+id/samp" />
+
+    <Button
+        android:id="@+id/phone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Phones"
+        android:layout_alignBaseline="@+id/sched"
+        android:layout_alignBottom="@+id/sched"
+        android:layout_toRightOf="@+id/sched"
+        android:layout_toEndOf="@+id/sched" />
+
+</RelativeLayout>

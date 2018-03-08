@@ -2,26 +2,19 @@ package opensampler.opensampler.schedule;
 /**
  * Created by Godtop on 1/23/2018.
  */
-import android.app.Activity;
-import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.TimePicker;
-import android.widget.Toast;
 
 import opensampler.opensampler.R;
-import opensampler.opensampler.schedule.ScheduleFragment;
 
 /**
  * Created by Godtop on 1/22/2018.
@@ -45,8 +38,8 @@ public class ScheduleActivity extends AppCompatActivity {
         setContentView(R.layout.schedule_activity_layout);
         Log.d(TAG, "onCreate: Started.");
         Log.d(TAG, "AFTER THE BUTTON");
-        hourText = (TextView) findViewById(R.id.startHourText);
-        minute = (EditText) findViewById(R.id.startingMinute);
+        hourText = (TextView) findViewById(R.id.startingHourDailyText);
+        minute = (EditText) findViewById(R.id.startingMinuteDaily);
         mTimePicker = (TimePicker) findViewById(R.id.timePicker);
         submitTime = (Button) findViewById(R.id.timeSubmit);
         sendItems();
