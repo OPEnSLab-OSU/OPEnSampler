@@ -4,7 +4,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#78aee1">
+    android:background="@color/colorPrimary">
 
     <TextView
         android:id="@+id/textTitle"
@@ -18,189 +18,235 @@
         android:layout_centerHorizontal="true" />
 
     <Button
-        android:id="@+id/btnNavFrag2"
+        android:id="@+id/submitSched"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Go to Samples"
+        android:text="Send"
+        android:layout_below="@+id/flushDurationDaily"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="66dp" />
+
+    <TextView
+        android:id="@+id/scheduleCommandsText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Phone Commands"
+        android:textSize="20dp"
+        android:textStyle="bold"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="14dp"
+        android:layout_marginStart="14dp"
         android:layout_below="@+id/textTitle"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true">
+    </TextView>
 
     <Spinner
         style="@style/menuItem"
         android:id="@+id/spinSchedMenu"
         android:entries="@array/schedItems"
         android:background="#FFF"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:layout_below="@+id/btnNavFrag2"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
+        android:layout_width="150dp"
+        android:backgroundTint="@color/doit"
+        android:dropDownWidth="150dp"
+        android:layout_marginTop="5dp"
+        android:layout_below="@+id/scheduleCommandsText"
+        android:layout_alignLeft="@+id/scheduleCommandsText"
+        android:layout_alignStart="@+id/scheduleCommandsText" />
     <Button
         android:id="@+id/setSchedType"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="30dp"
         android:text="Submit"
-        android:layout_alignBaseline="@+id/spinSchedMenu"
-        android:layout_alignBottom="@+id/spinSchedMenu"
-        android:layout_alignLeft="@+id/textTitle"
-        android:layout_alignStart="@+id/textTitle" />
+        android:textSize="10dp"
+        android:layout_below="@+id/spinSchedMenu"
+        android:layout_alignLeft="@+id/spinSchedMenu"
+        android:layout_alignStart="@+id/spinSchedMenu"
+        android:layout_marginTop="5dp" />
 
+    <EditText
+        android:id="@+id/periodLengthPeriod"
+        android:layout_alignParentEnd="true"
+        android:background="#FFF"
+        android:textColor="#000"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/setSchedType"
+        android:layout_marginBottom="5dp"
+        android:layout_width="50dp"
+        android:layout_height="40dp" />
+    <TextView
+        android:id="@+id/periodLengthPeriodText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="24dp"
+        android:textStyle="bold"
+        android:text="Period Length"
+        android:layout_marginRight="9dp"
+        android:layout_marginEnd="9dp"
+        android:layout_alignTop="@+id/periodLengthPeriod"
+        android:layout_toLeftOf="@+id/periodLengthPeriod"
+        android:layout_toStartOf="@+id/periodLengthPeriod" />
+    <EditText
+        android:id="@+id/sampleLengthPeriod"
+        android:background="#FFF"
+        android:textColor="#000"
+        android:layout_width="50dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/periodLengthPeriod"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:id="@+id/sampleLengthPeriodText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sample Length"
+        android:textSize="24dp"
+        android:textStyle="bold"
+        android:layout_below="@+id/periodLengthPeriod"
+        android:layout_alignRight="@+id/periodLengthPeriodText"
+        android:layout_alignEnd="@+id/periodLengthPeriodText" />
+    <EditText
+        android:id="@+id/flushDurationPeriod"
+        android:layout_width="50dp"
+        android:background="#FFF"
+        android:textColor="#000"
+        android:layout_height="40dp"
+        android:layout_marginBottom="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_below="@+id/sampleLengthPeriod"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:id="@+id/flushDurationPeriodText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="24dp"
+        android:textStyle="bold"
+        android:text="Flush Duration"
+        android:layout_alignTop="@+id/flushDurationPeriod"
+        android:layout_alignRight="@+id/sampleLengthPeriodText"
+        android:layout_alignEnd="@+id/sampleLengthPeriodText" />
+
+    <EditText
+        android:id="@+id/startingHourDaily"
+        android:textColor="#000"
+        android:layout_width="50dp"
+        android:layout_height="40dp"
+        android:background="#FFF"
+        android:textSize="14dp"
+        android:textStyle="bold"
+        android:enabled="false"
+        android:layout_below="@+id/timeSelectorActivity"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:id="@+id/startingHourDailyText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/startingHourDaily"
+        android:layout_marginRight="10dp"
+        android:layout_toLeftOf="@+id/startingHourDaily"
+        android:layout_toStartOf="@+id/startingHourDaily"
+        android:text="Starting Hour"
+        android:textSize="24dp" />
+    <EditText
+        android:inputType="text"
+        android:id="@+id/startingMinuteDaily"
+        android:textColor="#000"
+        android:layout_width="50dp"
+        android:background="#FFF"
+        android:layout_marginTop="5dp"
+        android:layout_height="40dp"
+        android:textSize="16dp"
+        android:textStyle="bold"
+        android:enabled="false"
+        android:layout_below="@+id/startingHourDaily"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="5dp"/>
+    <TextView
+        android:id="@+id/startingMinuteDailyText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/startingMinuteDaily"
+        android:layout_marginRight="10dp"
+        android:layout_toLeftOf="@+id/startingMinuteDaily"
+        android:layout_toStartOf="@+id/startingMinuteDaily"
+        android:text="Starting Minute"
+        android:textSize="24dp"/>
+    <EditText
+        android:inputType="text"
+        android:background="#FFF"
+        android:id="@+id/flushDurationDaily"
+        android:textColor="#000"
+        android:layout_width="50dp"
+        android:layout_height="40dp"
+        android:textSize="16dp"
+        android:textStyle="bold"
+        android:enabled="false"
+        android:layout_below="@+id/startingMinuteDaily"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+    <TextView
+        android:id="@+id/flushDurationDailyText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Flush Duration"
+        android:textSize="24dp"
+        android:layout_below="@+id/startingMinuteDaily"
+        android:layout_alignRight="@+id/startingMinuteDailyText"
+        android:layout_alignEnd="@+id/startingMinuteDailyText" />
+    <EditText
+        android:id="@+id/sampleLengthDaily"
+        android:layout_width="50dp"
+        android:textColor="#000"
+        android:background="#FFF"
+        android:layout_height="40dp"
+        android:layout_marginTop="5dp"
+        android:enabled="false"
+        android:inputType="text"
+        android:textSize="16dp"
+        android:textStyle="bold"
+        android:layout_below="@+id/flushDurationDaily"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+    <TextView
+        android:id="@+id/sampleLengthDailyText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sample Length"
+        android:textSize="24dp"
+        android:layout_alignBaseline="@+id/sampleLengthDaily"
+        android:layout_alignBottom="@+id/sampleLengthDaily"
+        android:layout_alignRight="@+id/flushDurationDailyText"
+        android:layout_alignEnd="@+id/flushDurationDailyText" />
 
     <Button
-        android:id="@+id/btnNavSecondActivity"
+        android:id="@+id/timeSelectorActivity"
         android:layout_width="50dp"
-        android:layout_height="30dp"
+        android:layout_height="40dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_below="@+id/setSchedType"
-        android:background="@color/white"
         android:layout_marginBottom="5dp"
+        android:background="@color/colorAccent"
         android:text="Set"
         android:textSize="14dp" />
 
-    <EditText
-        android:inputType="text"
-        android:id="@+id/periodLength"
-        android:background="@color/white"
-        android:layout_width="50dp"
-        android:layout_height="30dp"
-        android:textSize="14dp"
-        android:layout_below="@+id/numDays"
-        android:layout_alignLeft="@+id/sampleLength"
-        android:layout_alignStart="@+id/sampleLength"
-        android:layout_marginBottom="5dp"
-        android:enabled="false"/>
-
-    <EditText
-        android:inputType="text"
-        android:id="@+id/sampleLength"
-        android:background="@color/white"
-        android:layout_width="50dp"
-        android:layout_height="30dp"
-        android:textSize="14dp"
-        android:layout_below="@+id/periodLength"
-        android:layout_alignLeft="@+id/startingHour"
-        android:layout_alignStart="@+id/startingHour"
-        android:layout_marginBottom="5dp"
-        android:enabled="false"/>
-
-    <EditText
-        android:id="@+id/startingHour"
-        android:background="@color/white"
-        android:layout_width="50dp"
-        android:layout_height="30dp"
-        android:textSize="16dp"
-        android:textStyle="bold"
-        android:layout_below="@+id/btnNavSecondActivity"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginBottom="5dp"
-        android:enabled="false"/>
-
-    <EditText
-        android:inputType="text"
-        android:id="@+id/startingMinute"
-        android:background="@color/white"
-        android:layout_width="50dp"
-        android:layout_height="30dp"
-        android:textSize="16dp"
-        android:textStyle="bold"
-        android:enabled="false"
-        android:layout_below="@+id/startingHour"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginBottom="5dp"/>
-
-    <EditText
-        android:inputType="text"
-        android:id="@+id/numDays"
-        android:background="@color/white"
-        android:layout_width="50dp"
-        android:layout_height="30dp"
-        android:textSize="16dp"
-        android:textStyle="bold"
-        android:enabled="false"
-        android:layout_below="@+id/startingMinute"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginBottom="5dp"/>
-
     <TextView
-        android:id="@+id/numDaysText"
+        android:id="@+id/timeSelectionText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Number of Days"
-        android:textSize="24dp"
-        android:layout_alignBottom="@+id/numDays"
-        android:layout_alignRight="@+id/startMinuteText"
-        android:layout_alignEnd="@+id/startMinuteText" />
-
-    <TextView
-        android:id="@+id/startHrText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="24dp"
         android:text="Time Selector"
-        android:layout_alignBottom="@+id/btnNavSecondActivity"
-        android:layout_alignRight="@+id/periodLenText"
-        android:layout_alignEnd="@+id/periodLenText" />
-
-    <TextView
-        android:id="@+id/periodLenText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/periodLength"
-        android:layout_toLeftOf="@+id/periodLength"
         android:textSize="24dp"
-        android:text="Period Length in Minutes"
-        android:layout_marginRight="10dp"
-        android:layout_toStartOf="@+id/periodLength"
-        />
-
-    <TextView
-        android:id="@+id/sampleLengthText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/sampleLength"
-        android:layout_toLeftOf="@+id/sampleLength"
-        android:textSize="24dp"
-        android:text="Sample Length in Minutes"
-        android:layout_marginRight="10dp"
-        android:layout_toStartOf="@+id/sampleLength" />
-
-    <TextView
-        android:id="@+id/startHourText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/startingHour"
-        android:layout_marginRight="10dp"
-        android:layout_toLeftOf="@+id/startingHour"
-        android:layout_toStartOf="@+id/startingHour"
-        android:text="Starting Hour"
-        android:textSize="24dp" />
-
-    <TextView
-        android:id="@+id/startMinuteText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/startingMinute"
-        android:layout_marginRight="10dp"
-        android:layout_toLeftOf="@+id/startingMinute"
-        android:layout_toStartOf="@+id/startingMinute"
-        android:text="Starting Minute"
-        android:textSize="24dp"/>
-
-    <Button
-        android:id="@+id/submitSched"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Send"
-        android:layout_below="@+id/sampleLength"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignTop="@+id/periodLengthPeriod"
+        android:layout_alignRight="@+id/startingHourDailyText"
+        android:layout_alignEnd="@+id/startingHourDailyText" />
 
 </RelativeLayout>
 

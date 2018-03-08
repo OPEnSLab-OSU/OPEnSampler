@@ -11,9 +11,11 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import opensampler.opensampler.MainActivity;
+import org.w3c.dom.Text;
+
 import opensampler.opensampler.R;
 
 /**
@@ -24,16 +26,32 @@ public class ScheduleFragment extends Fragment {
     private static final String TAG = "ScheduleFragment";
     private String temp = "";
     private Button btnNavFrag2;
-    private Button btnNavSecondActivity;
     private Button btnSetSched;
 	private static final String KEY_LAYOUT_MANAGER = "layoutManager";
     private static final int count = 10;
     private static final int span = 2;
-    private EditText periodLength;
-    private EditText sampleLength;
     private EditText numDays;
-    public static EditText startingHour;
+
+    //Periodic
+    private EditText periodLengthPeriodic;
+    private TextView periodLengthPeriodicText;
+    private EditText sampleLengthPeriodic;
+    private TextView sampleLengthPeriodicText;
+    private EditText flushDurationPeriodic;
+    private TextView flushDurationPeriodicText;
+
+    //Daily
+    private static EditText startingHour;
+    private TextView startingHourText;
     private static EditText startingMin;
+    private TextView startingMinText;
+    private EditText sampleLengthDaily;
+    private TextView sampleLengthDailyText;
+    private EditText flushDurationDaily;
+    private TextView flushDurationDailyText;
+    private Button btnNavSecondActivity;
+    private TextView timeSelectionText;
+
     private Spinner schedMenu;
     private String mParam1;
 
@@ -70,31 +88,57 @@ public class ScheduleFragment extends Fragment {
     }
 
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState){
-        View view = inflater.inflate(R.layout.schedule_frag, container, false);
+        final View view = inflater.inflate(R.layout.schedule_frag, container, false);
 
-        //Buttons, EditText and Textview declarations for schedule_frag.xml
+        //Declarations for schedule_frag.xml
         mCurrentLayoutManagerType = LayoutManagerType.LINEAR_LAYOUT_MANAGER;
         mCurrentLayoutManagerType = LayoutManagerType.LINEAR_LAYOUT_MANAGER;
         mSchedAdapt = new ScheduleAdapter(mDataset);
-        btnNavFrag2 = (Button) view.findViewById(R.id.btnNavFrag2);
-        btnNavSecondActivity = (Button) view.findViewById(R.id.btnNavSecondActivity);
         btnSetSched = (Button) view.findViewById(R.id.setSchedType);
         schedMenu = (Spinner) view.findViewById(R.id.spinSchedMenu);
-        numDays = (EditText) view.findViewById(R.id.numDays);
 
-        sampleLength = (EditText) view.findViewById(R.id.sampleLength);
-        periodLength = (EditText) view.findViewById(R.id.periodLength);
-        startingHour = (EditText) view.findViewById(R.id.startingHour);
-        startingMin = (EditText) view.findViewById(R.id.startingMinute);
+        //Daily
+        sampleLengthDaily = (EditText) view.findViewById(R.id.sampleLengthDaily);
+        sampleLengthDailyText = (TextView) view.findViewById(R.id.sampleLengthDailyText);
+        flushDurationDaily = (EditText) view.findViewById(R.id.flushDurationDaily);
+        flushDurationDailyText = (TextView) view.findViewById(R.id.flushDurationDailyText);
+        startingHour = (EditText) view.findViewById(R.id.startingHourDaily);
+        startingHourText = (TextView) view.findViewById(R.id.startingHourDailyText);
+        startingMin = (EditText) view.findViewById(R.id.startingMinuteDaily);
+        startingMinText = (TextView) view.findViewById(R.id.startingMinuteDailyText);
+        btnNavSecondActivity = (Button) view.findViewById(R.id.timeSelectorActivity);
+        timeSelectionText = (TextView) view.findViewById(R.id.timeSelectionText);
 
-        //Button click listener functions for all three buttons on the screen
-        Log.d(TAG, "onCreateView: Started.");
-        btnNavFrag2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view){
-                Toast.makeText(getActivity(), "Going to Samples", Toast.LENGTH_SHORT).show();
-                ((MainActivity)getActivity()).setViewPager(1);            }
-        });
+        //Periodic
+        periodLengthPeriodic = (EditText) view.findViewById(R.id.periodLengthPeriod);
+        periodLengthPeriodicText = (TextView) view.findViewById(R.id.periodLengthPeriodText);
+        sampleLengthPeriodic = (EditText) view.findViewById(R.id.sampleLengthPeriod);
+        sampleLengthPeriodicText = (TextView) view.findViewById(R.id.sampleLengthPeriodText);
+        flushDurationPeriodic = (EditText) view.findViewById(R.id.flushDurationPeriod);
+        flushDurationPeriodicText = (TextView) view.findViewById(R.id.flushDurationPeriodText);
+
+        btnNavSecondActivity.setVisibility(view.VISIBLE);
+        timeSelectionText.setVisibility(view.VISIBLE);
+        startingHour.setVisibility(view.VISIBLE);
+        startingHourText.setVisibility(view.VISIBLE);
+        startingMin.setVisibility(view.VISIBLE);
+        startingMinText.setVisibility(view.VISIBLE);
+        sampleLengthDaily.setVisibility(view.VISIBLE);
+        sampleLengthDailyText.setVisibility(view.VISIBLE);
+        flushDurationDaily.setVisibility(view.VISIBLE);
+        flushDurationDailyText.setVisibility(view.VISIBLE);
+        sampleLengthDaily.setEnabled(true);
+        flushDurationDaily.setEnabled(true);
+
+        //Hide all the Periodic view items
+        periodLengthPeriodic.setVisibility(view.INVISIBLE);
+        periodLengthPeriodicText.setVisibility(view.INVISIBLE);
+        flushDurationPeriodic.setVisibility(view.INVISIBLE);
+        flushDurationPeriodicText.setVisibility(view.INVISIBLE);
+        sampleLengthPeriodic.setVisibility(view.INVISIBLE);
+        sampleLengthPeriodicText.setVisibility(view.INVISIBLE);
+
+
         // This is for a secondary activity inside the schedule in case we want to add that later
         btnNavSecondActivity.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -102,6 +146,7 @@ public class ScheduleFragment extends Fragment {
                 Toast.makeText(getActivity(), "Going to Schedule Activity", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(getActivity(), ScheduleActivity.class);
                 startActivity(intent);
+
             }
         });
 
@@ -111,33 +156,49 @@ public class ScheduleFragment extends Fragment {
                 temp = schedMenu.getSelectedItem().toString();
                 if(temp.equals("Periodic")){
                     Log.d(TAG, "Periodic was hit!");
-                    sampleLength.setText("");
-                    periodLength.setText("");
-                    numDays.setText("");
-                    numDays.setEnabled(true);
-                    sampleLength.setEnabled(true);
-                    periodLength.setEnabled(true);
+                    //Hide all the Daily View Items
+                    btnNavSecondActivity.setVisibility(view.INVISIBLE);
+                    timeSelectionText.setVisibility(view.INVISIBLE);
+                    startingHour.setVisibility(view.INVISIBLE);
+                    startingHourText.setVisibility(view.INVISIBLE);
+                    startingMin.setVisibility(view.INVISIBLE);
+                    startingMinText.setVisibility(view.INVISIBLE);
+                    sampleLengthDaily.setVisibility(view.INVISIBLE);
+                    sampleLengthDailyText.setVisibility(view.INVISIBLE);
+                    flushDurationDaily.setVisibility(view.INVISIBLE);
+                    flushDurationDailyText.setVisibility(view.INVISIBLE);
+                    //Show all the Periodic View Items
+                    periodLengthPeriodic.setVisibility(view.VISIBLE);
+                    periodLengthPeriodicText.setVisibility(view.VISIBLE);
+                    flushDurationPeriodic.setVisibility(view.VISIBLE);
+                    flushDurationPeriodicText.setVisibility(view.VISIBLE);
+                    sampleLengthPeriodic.setVisibility(view.VISIBLE);
+                    sampleLengthPeriodicText.setVisibility(view.VISIBLE);
                 }
                 if(temp.equals("Daily")){
                     Log.d(TAG, "Daily was hit!");
-                    sampleLength.setText("");
-                    numDays.setText("");
-                    periodLength.setText("1440");
-                    sampleLength.setEnabled(true);
-                    numDays.setEnabled(true);
-                    periodLength.setEnabled(false);
-                }
-                if(temp.equals("Custom")){
-                    Log.d(TAG, "Custom was hit!");
-                    numDays.setText("");
-                    sampleLength.setText("");
-                    periodLength.setText("");
-                    sampleLength.setEnabled(true);
-                    periodLength.setEnabled(true);
-                    numDays.setEnabled(true);
+                    //Show all the daily items
+                    btnNavSecondActivity.setVisibility(view.VISIBLE);
+                    timeSelectionText.setVisibility(view.VISIBLE);
+                    startingHour.setVisibility(view.VISIBLE);
+                    startingHourText.setVisibility(view.VISIBLE);
+                    startingMin.setVisibility(view.VISIBLE);
+                    startingMinText.setVisibility(view.VISIBLE);
+                    sampleLengthDaily.setVisibility(view.VISIBLE);
+                    sampleLengthDailyText.setVisibility(view.VISIBLE);
+                    flushDurationDaily.setVisibility(view.VISIBLE);
+                    flushDurationDailyText.setVisibility(view.VISIBLE);
+                    //Hide all the Periodic view items
+                    periodLengthPeriodic.setVisibility(view.INVISIBLE);
+                    periodLengthPeriodicText.setVisibility(view.INVISIBLE);
+                    flushDurationPeriodic.setVisibility(view.INVISIBLE);
+                    flushDurationPeriodicText.setVisibility(view.INVISIBLE);
+                    sampleLengthPeriodic.setVisibility(view.INVISIBLE);
+                    sampleLengthPeriodicText.setVisibility(view.INVISIBLE);
                 }
             }
         });
         return view;
     }
 }
+

@@ -4,7 +4,18 @@
     <string-array name="schedItems">
         <item>Periodic</item>
         <item>Daily</item>
-        <item>Custom</item>
+    </string-array>
+
+    <string-array name="phoneActions">
+        <item>Add</item>
+        <item>Remove</item>
+        <item>Update</item>
+    </string-array>
+
+    <string-array name="phoneNumbers">
+        <item>5033829015</item>
+        <item>1234567890</item>
+        <item>4518746587</item>
     </string-array>
 
 </resources>

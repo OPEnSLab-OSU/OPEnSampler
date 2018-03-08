@@ -14,9 +14,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
-import opensampler.opensampler.MainActivity;
 import opensampler.opensampler.R;
-import opensampler.opensampler.samples.SampleDetailActivity;
 
 /**
  * Created by Godtop on 1/22/2018.
@@ -24,8 +22,6 @@ import opensampler.opensampler.samples.SampleDetailActivity;
 
 public class SamplesFragment extends Fragment implements SampleAdapter.OnSearchResultClickListener {
     private static final String TAG = "SampleFragment";
-    private Button btnNavFrag1;
-    private Button btnNavFrag3;
     private Button btnNavSecondActivity;
     private static final String KEY_LAYOUT_MANAGER = "layoutManager";
     private static final int count = 10;
@@ -67,9 +63,7 @@ public class SamplesFragment extends Fragment implements SampleAdapter.OnSearchR
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState){
         View view = inflater.inflate(R.layout.sample_frag, container, false);
         mCurrentLayoutManagerType = LayoutManagerType.LINEAR_LAYOUT_MANAGER;
-        btnNavFrag1 = (Button) view.findViewById(R.id.btnNavFrag1);
-        btnNavFrag3 = (Button) view.findViewById(R.id.btnNavFrag3);
-        btnNavSecondActivity = (Button) view.findViewById(R.id.btnNavSecondActivity);
+        btnNavSecondActivity = (Button) view.findViewById(R.id.timeSelectorActivity);
         mRecyclerView = (RecyclerView) view.findViewById(R.id.samRecView);
         mLayoutManager = new LinearLayoutManager(getActivity());
 
@@ -79,21 +73,6 @@ public class SamplesFragment extends Fragment implements SampleAdapter.OnSearchR
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.scrollToPosition(0);
 
-        btnNavFrag1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view){
-                Toast.makeText(getActivity(), "Going to Connections", Toast.LENGTH_SHORT).show();
-                ((MainActivity)getActivity()).setViewPager(0);
-            }
-
-        });
-        btnNavFrag3.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view){
-                Toast.makeText(getActivity(), "Going to Schedule", Toast.LENGTH_SHORT).show();
-                ((MainActivity)getActivity()).setViewPager(2);            }
-
-        });
         btnNavSecondActivity.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view){
