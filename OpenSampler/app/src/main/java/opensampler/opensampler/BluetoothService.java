@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.UUID;
 import android.annotation.TargetApi;
 import static android.content.ContentValues.TAG;
-import android.support.v4.content.LocalBroadcastManager;
 
 /**
  * Created by hunter on 2/14/18.
