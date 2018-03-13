@@ -12,5 +12,6 @@
     <style name="menuItem">
         <item name="android:textSize">20sp</item>
     </style>
+    <color name="black">#FF000000</color>
 
 </resources>

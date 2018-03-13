@@ -23,6 +23,9 @@
     <string name="cancel">Cancel</string>
     <string name="paired">paired</string>
     <string name="no_device">&lt;Select a device&gt;</string>
+    <string name="select_device">Select a device</string>
+    <string name="scanning">Scanning for devices...</string>
+    <string name="device">Device:</string>
 
 
 

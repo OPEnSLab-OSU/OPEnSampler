@@ -22,8 +22,11 @@
         <activity android:name=".schedule.ScheduleActivity"></activity>
         <activity android:name=".connections.ConnectionActivity"></activity>
         <activity android:name=".connections.ConnectionDetailActivity"></activity>
+        <activity android:name=".DeviceListActivity"></activity>
         <service android:enabled="true" android:name=".BluetoothService"/>
     </application>
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 </manifest>

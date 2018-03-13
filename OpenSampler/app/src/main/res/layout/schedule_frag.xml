@@ -7,6 +7,29 @@
     android:background="@color/colorPrimary">
 
     <TextView
+        android:id="@+id/deviceName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/deviceLabel"
+        android:layout_alignBottom="@+id/deviceLabel"
+        android:layout_marginLeft="13dp"
+        android:layout_marginStart="13dp"
+        android:layout_toEndOf="@+id/deviceLabel"
+        android:layout_toRightOf="@+id/deviceLabel"
+        android:text="@string/no_device"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TextView
+        android:id="@+id/deviceLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/btn_connect"
+        android:layout_alignStart="@+id/btn_connect"
+        android:layout_below="@+id/btn_connect"
+        android:layout_marginTop="23dp"
+        android:text="@string/device" />
+
+    <TextView
         android:id="@+id/textTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -41,7 +64,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true">
     </TextView>
-    
+
 
     <Spinner
         style="@style/menuItem"
@@ -248,6 +271,15 @@
         android:layout_alignTop="@+id/periodLengthPeriod"
         android:layout_alignRight="@+id/startingHourDailyText"
         android:layout_alignEnd="@+id/startingHourDailyText" />
+
+    <Button
+        android:id="@+id/btn_connect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/setSchedType"
+        android:layout_alignStart="@+id/setSchedType"
+        android:layout_alignTop="@+id/submitSched"
+        android:text="Connect" />
 
 </RelativeLayout>
 

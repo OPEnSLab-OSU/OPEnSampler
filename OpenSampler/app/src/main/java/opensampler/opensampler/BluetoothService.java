@@ -253,8 +253,6 @@ public class BluetoothService extends Service {
     @TargetApi(18)
     public void writeRXCharacteristic(byte[] value)
     {
-
-
         BluetoothGattService RxService = mBluetoothGatt.getService(RX_SERVICE_UUID);
         showMessage("mBluetoothGatt null"+ mBluetoothGatt);
         if (RxService == null) {
@@ -286,21 +284,3 @@ public class BluetoothService extends Service {
         return mBluetoothGatt.getServices();
     }
 }
-
-/*
-        Bundle bundle = intent.getExtras();
-        String type = bundle.getString("type");
-        if(type.equals("periodic")){
-            Log.d(TAG, "Peridoic alarm ");
-            int minutes = Integer.parseInt(bundle.getString("minutes"));
-            int sampLen = Integer.parseInt(bundle.getString("sampLen"));
-            Log.d(TAG, "Minutes: " + minutes + " Sample length: " + sampLen);
-        }else if(type.equals("alarm")){
-            Log.d(TAG, "Daily alarm");
-            int hour = Integer.parseInt(bundle.getString("hour"));
-            int minutes = Integer.parseInt(bundle.getString("minutes"));
-            int days = Integer.parseInt(bundle.getString("days"));
-            int sampLen = Integer.parseInt(bundle.getString("sampLen"));
-            Log.d(TAG, "Hour: " + hour + " Minutes: " + minutes + " Days: " + days + " Sample Length: " + sampLen);
-        }
-        */
