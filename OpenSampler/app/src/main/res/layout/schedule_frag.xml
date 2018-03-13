@@ -41,6 +41,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true">
     </TextView>
+    
 
     <Spinner
         style="@style/menuItem"

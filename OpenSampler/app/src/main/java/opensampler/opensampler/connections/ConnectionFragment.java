@@ -1,5 +1,6 @@
 package opensampler.opensampler.connections;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -26,6 +27,10 @@ public class ConnectionFragment extends Fragment implements ConnectionAdapter.On
     private static final String KEY_LAYOUT_MANAGER = "layoutManager";
     private static final int count = 10;
     private static final int span = 2;
+
+    //Hunter BT Stuff
+    private BluetoothAdapter mBluetoothAdapter;
+
 
     private enum LayoutManagerType {
         GRID_LAYOUT_MANAGER,
