@@ -25,13 +25,11 @@
 package opensampler.opensampler.schedule;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -382,9 +380,12 @@ public class ScheduleFragment extends Fragment {
         }
     };
 
+    //Receives broadcasts and responds accordingly
     private final BroadcastReceiver UARTStatusChangeReceiver = new BroadcastReceiver() {
 
         public void onReceive(Context context, Intent intent) {
+            //all broadcasts are given an intent, intent.getaction is the action specified by the broadcast
+            //the action is used to determine what needs to change in the ui such as changing the connect button to disconnect
             String action = intent.getAction();
 
             final Intent mIntent = intent;
@@ -565,12 +566,6 @@ public class ScheduleFragment extends Fragment {
                 break;
         }
     }
-
-    /*
-    @Override
-    public void onCheckedChanged(RadioGroup group, int checkedId) {
-
-    }*/
 
     private void showMessage(String msg) {
         Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT).show();

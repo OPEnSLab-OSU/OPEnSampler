@@ -24,14 +24,11 @@
  */
 package opensampler.opensampler;
 
-import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -138,7 +135,9 @@ public class DeviceListActivity extends Activity {
            scanLeDevice(true);
 
     }
-    
+
+    //Standard android code for scanning using ble
+    //the standard scan time is 10 seconds, any more and you are more than likely wasting battery
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void scanLeDevice(final boolean enable) {
         final Button cancelButton = (Button) findViewById(R.id.btn_cancel);
