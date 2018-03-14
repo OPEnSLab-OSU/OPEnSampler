@@ -1,5 +1,7 @@
 
-/*
+/* Some of the code used in this application falls under the copyright notice below. To view the original source code please use the following link:
+ * https://github.com/NordicPlayground/Android-nRF-UART
+ *
  * Copyright (c) 2015, Nordic Semiconductor
  * All rights reserved.
  *
