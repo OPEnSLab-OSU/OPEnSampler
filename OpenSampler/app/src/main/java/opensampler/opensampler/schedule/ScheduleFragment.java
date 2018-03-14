@@ -285,7 +285,7 @@ public class ScheduleFragment extends Fragment {
                     String minutes = periodLengthPeriodic.getText().toString();
                     String sampLen = sampleLengthPeriodic.getText().toString();
                     String flushDur = flushDurationPeriodic.getText().toString();
-                    String message = type + "|" + minutes + "|" + sampLen + "|" + flushDur;
+                    String message = "P" + minutes + "|S" + sampLen + "|F" + flushDur;
                     byte[] value;
                     try{
                         //send message
@@ -307,7 +307,7 @@ public class ScheduleFragment extends Fragment {
                     String minutes = startingMin.getText().toString();
                     String flushDur = flushDurationDaily.getText().toString();
                     String sampLen = sampleLengthDaily.getText().toString();
-                    String message = type + "|" + hour + "|" + minutes  + "|FD" + flushDur  + "|" + sampLen;
+                    String message = "D" + hour + "," + minutes  + "|F" + flushDur  + "|S" + sampLen;
                     byte[] value;
                     try{
                         //send message
