@@ -55,7 +55,7 @@ Pumps will not turn on if no valves are open at that time.
 Likewise, turning off all valves (including flush valve) will automatically shut off pumps
 */
 
-#include "Adafruit_BLE_UART.h"  // Library for nRF8000 (BLE breakout)
+#include "Adafruit_BLE_UART.h"  // Library for nRF8001 (BLE breakout)
 #include <Wire.h>               // i2c connection for RTC DS3231
 #include <PinChangeInterrupt.h> // Allows RTC to interrupt on analog pin
 #include <RTClibExtended.h>     // Library to configure DS3231
@@ -109,7 +109,7 @@ unsigned char TPICBuffer[4] = {0x00}; // Store Status bits of TPICs, see ValveAd
 uint8_t moduleNum = 0;  // number of module depending on how high valve count is (groups of 25)
 uint8_t valveNum = 0;  // number of valve relative to current module
 
-CommandParser BLEParser(' ', '$');
+CommandParser BLEParser(',', '|');
 // TODO: Rename
 Adafruit_BLE_UART BLESerial = Adafruit_BLE_UART(bleReqPin, bleRdyPin, bleRstPin);
 
@@ -136,10 +136,6 @@ void setup() {
   {
     writeEEPROMDefaults();
   }
-
-  // DEBUG: Testing BLEParser
-  char testBuffer[8] = "A 5 30$";
-  BLEParser.process(testBuffer, 8);
 
   // Bluetooth Setup (see Bluetooth.ino)
   BLESerial.setRXcallback(RXCallback);
