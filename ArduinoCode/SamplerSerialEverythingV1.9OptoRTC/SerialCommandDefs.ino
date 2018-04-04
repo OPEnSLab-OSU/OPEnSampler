@@ -14,9 +14,9 @@
   FD <milliseconds>
     Set flush duration period in ms. Should be about 20sec, but will change depending on tubing length.
   PR <index>
-    Print the phone number located at index. Index must be < NUM_PHONES.
+    Print the phone number located at index. Index must be < numSMSRecipients.
   PW <index> <phone number>
-    Write a phone number to location index. Index must be < NUM_PHONES, and phone number may be up to 15 digits.
+    Write a phone number to location index. Index must be < numSMSRecipients, and phone number may be up to phoneNumberLength long.
   RST
     Reset all configuration values to defaults, overwriting previous settings.
   SAD <hour> <minute>
@@ -147,11 +147,11 @@ void listenForSerial()
        */
       else if (chr == 'W')
       {
-        char buffer[17]; // 17 = 1 space, 15 digits, 1 null terminator
+        char buffer[phoneNumberLength + 2]; // + 2 for 1 space & 1 null terminator
         int read;
 
         index = Serial.parseInt();
-        read = Serial.readBytes(buffer, 16);
+        read = Serial.readBytes(buffer, phoneNumberLength + 1);
         buffer[read] = '\0';
 
         config.setSMSNumber(index, buffer + 1); // + 1 to ignore the space

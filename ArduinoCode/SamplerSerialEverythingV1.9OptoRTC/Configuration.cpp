@@ -20,7 +20,9 @@ void Configuration::setDefaults()
   configData.written = false;
   configData.mode = Mode::DAILY;
 
-  memset(configData.SMSNumbers, 0, sizeof(char) * numSMSRecipients * 16);
+  // DEBUG
+  // memset(configData.SMSNumbers, 0, sizeof(char) * numSMSRecipients * (phoneNumberLength + 1));
+  memset(configData.SMSNumbers, 'A', sizeof(char) * numSMSRecipients * (phoneNumberLength + 1));
 }
 
 /**
@@ -173,8 +175,8 @@ void Configuration::setSampleDuration(unsigned long milliseconds)
  *
  * Sets a null-terminated string containing a phone number at the specified
  * index to be stored persistently in configuration. Phone numbers can be up to
- * 15 digits in length. It's assumed that buffer can store at least 16 chars.
- * The number should be stored without punctuation or whitespace
+ * as long as phoneNumberLength specifies.
+ * The number should be stored without punctuation or whitespace.
  * (e.g. 123456789012345).
  */
 void Configuration::setSMSNumber(int index, char *buffer)
@@ -182,8 +184,8 @@ void Configuration::setSMSNumber(int index, char *buffer)
   if (index >= numSMSRecipients)
     return;
 
-  strncpy(configData.SMSNumbers[index], buffer, 15);
-  configData.SMSNumbers[index][15] = '\0';
+  strncpy(configData.SMSNumbers[index], buffer, phoneNumberLength);
+  configData.SMSNumbers[index][phoneNumberLength] = '\0';
 
   return;
 }

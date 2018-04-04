@@ -17,7 +17,7 @@ struct config_t {
   unsigned long sampleDurationMs; // How long to draw a sample (in milliseconds)
   uint16_t sampleVolumeMl; // Sample volume in ml (currently unused)
   uint8_t valveNumber; // Current number of valves sampled, 0=reset/default
-  char SMSNumbers[numSMSRecipients][16]; // Phone numbers for SMS status update recipients
+  char SMSNumbers[numSMSRecipients][phoneNumberLength+1]; // Phone numbers for SMS status update recipients
 };
 
 // Struct for saving Sampler params in EEPROM, see http://playground.arduino.cc/Code/EEPROMWriteAnything

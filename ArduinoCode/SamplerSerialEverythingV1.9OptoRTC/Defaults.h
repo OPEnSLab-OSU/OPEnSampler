@@ -33,9 +33,21 @@ const uint8_t SampleVolMlDef = 250;
 // This value + 1 will be the next valve to draw a sample.
 const bool SampleValveNumDef = 0;
 
+/* --------------------
+ * Phone Number Storage
+ * --------------------
+ *
+ * WARNING: Raising this too high might may cause instability/crashing if too little dynamic memory
+ *          is available, or if the configuration struct becomes too large for EEPROM.
+ *
+ * bytes used = numSMSRecipients * (phoneNumberLength + 1)
+ */
+
 // Quantity of phone numbers to store in EEPROM that will recieve SMS status updates.
-// Each requires 16 bytes.
-const uint8_t numSMSRecipients = 20; // 20*16 = 320 bytes of EEPROM used
+const uint8_t numSMSRecipients = 3;
+
+// Maximum number of digits in a phone number
+const uint8_t phoneNumberLength = 13;
 
 /* -----------------------
  * OPEnSampler Information
