@@ -55,6 +55,8 @@ Pumps will not turn on if no valves are open at that time.
 Likewise, turning off all valves (including flush valve) will automatically shut off pumps
 */
 
+#include <limits.h>
+
 #include "Adafruit_BLE_UART.h"  // Library for nRF8000 (BLE breakout)
 #include <Wire.h>               // i2c connection for RTC DS3231
 #include <PinChangeInterrupt.h> // Allows RTC to interrupt on analog pin
@@ -446,7 +448,7 @@ void writeEEPROMDefaults()
 
   uint8_t minute = config.getSampleMinute();
   uint8_t hour   = config.getSampleHour();
-  RTC.setAlarm(ALM1_MATCH_HOURS, minute, hour, 0);
+  // RTC.setAlarm(ALM1_MATCH_HOURS, minute, hour, 0);
 
   attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(wakeUpPin), wakeUp, FALLING);
 }
@@ -456,10 +458,58 @@ void writeEEPROMDefaults()
  */
 void sendConfigOverBluetooth()
 {
-  size_t configSize = sizeof(config_t);
-  uint8_t configData[configSize];
+  // size_t configSize = sizeof(config_t);
+  // uint8_t configData[configSize];
+  // size_t configSize = 6;
+  // uint8_t configData[configSize] = "HELLO";
+  size_t configSize = 60;
+  uint8_t configData[configSize + 1] = "HELLOHELLOHELLOHELLOHELLOHELLOHELLOHELLOHELLOHELLOHELLOHELLO";
+  size_t sent, bytesThisPass = 0;
 
-  config.getConfigData(configData);
+  // DEBUG
+  Serial.print(F("DEBUG: struct size: "));
+  Serial.println(configSize);
+  // --------------------------------
+  // config.getConfigData(configData);
 
-  BLESerial.write(configData, configSize);
+  while (configSize) {
+    // DEBUG
+    Serial.print(F("DEBUG: Loop start configSize: "));
+    Serial.println(configSize);
+    // --------------------------------
+
+    bytesThisPass = configSize;
+    // if (bytesThisPass > UCHAR_MAX)
+    //   bytesThisPass = UCHAR_MAX;
+    // DEBUG
+    if (bytesThisPass > 20)
+      bytesThisPass = 20;
+
+    Serial.print(F("DEBUG: bytesThisPass: "));
+    Serial.println(bytesThisPass);
+
+    sent = (size_t) BLESerial.write(&configData[sent], bytesThisPass);
+    Serial.print(F("DEBUG: Sent: "));
+    Serial.println(sent);
+    if (sent < bytesThisPass) {
+      Serial.println(F("ERROR: Failed to send over BLE."));
+
+      // DEBUG
+      // Serial.println(F("DEBUG: Waiting..."));
+      // delay(2000);
+    }
+
+    // Break when all is written
+    // TODO: Compare to - bytesThisPass
+    if (!(configSize -= sent)) break;
+
+    // DEBUG
+    if (sent == 0) {
+      Serial.println(F("DEBUG: Sent 0, quitting."));
+      break;
+    }
+
+    Serial.print(F("DEBUG: Loop end configSize: "));
+    Serial.println(configSize);
+  }
 }
