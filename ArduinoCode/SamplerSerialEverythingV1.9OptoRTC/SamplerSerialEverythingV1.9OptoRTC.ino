@@ -87,8 +87,6 @@ const byte bleRdyPin = 3;  // Interrupt pin for when data is ready
 const byte bleRstPin = A2; // Used to reset board on startup
 //----------------------------
 
-signed int directionMotor = 0; // 0=off, 1=draw water in, -1=pull water out
-
 volatile bool ledState = 0;
 volatile bool timerEN = false; // Flag to enable or disable sampler timed functions
 volatile bool sleepEN = false; // Flag to check in loop to see if we should sleep or not
@@ -109,7 +107,7 @@ unsigned char TPICBuffer[4] = {0x00}; // Store Status bits of TPICs, see ValveAd
 uint8_t moduleNum = 0;  // number of module depending on how high valve count is (groups of 25)
 uint8_t valveNum = 0;  // number of valve relative to current module
 
-CommandParser BLEParser(' ', '$');
+CommandParser BLEParser(',', '|');
 // TODO: Rename
 Adafruit_BLE_UART BLESerial = Adafruit_BLE_UART(bleReqPin, bleRdyPin, bleRstPin);
 
@@ -136,10 +134,6 @@ void setup() {
   {
     writeEEPROMDefaults();
   }
-
-  // DEBUG: Testing BLEParser
-  char testBuffer[8] = "A 5 30$";
-  BLEParser.process(testBuffer, 8);
 
   // Bluetooth Setup (see Bluetooth.ino)
   BLESerial.setRXcallback(RXCallback);
@@ -217,10 +211,10 @@ void loop()
     // Disable RTC's wakeup interrupt pin
     detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(wakeUpPin));
 
-    if (config.getValveNumber() >= numValves) // If target valve number is greater than total number of desired valves
+    // If target valve number is greater than total number of valves
+    if (config.getValveNumber() >= numValves)
     {
-      Serial.println(F("Total number of samples reached!"));
-      Serial.println(F("Sleeping forever, bye!"));
+      Serial.println(F("Total number of samples reached! Sleeping forever..."));
       // warning, because wakeup pin is disabled above, sleep forever, no wakeup from here
       sleepEN = true; // Set sleep flag to sleep at end of loop
     }
@@ -268,7 +262,6 @@ void loop()
       Serial.print(F("Flushed System for ")); Serial.print(config.getFlushDuration()); Serial.println(F("ms"));
       FlushState = LOW; // Lower Flush flag, done flushing, Now Entering Sample Mode
       setPump(pumpState::OFF);
-      // flushOFF();    // Turn off flush valve here TODO
 
       config.setValveNumber(config.getValveNumber() + 1);
       config.writeToEEPROM(); // Save new valve number to EEPROM

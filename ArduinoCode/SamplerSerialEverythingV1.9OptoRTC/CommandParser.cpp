@@ -115,11 +115,18 @@ bool CommandParser::parseArguments(const char *buffer, uint8_t length) const
  */
 bool CommandParser::execute(char identifier, char *args[], size_t args_size) const
 {
-    unsigned int int_args[args_size];
-    unsigned long milliseconds;
-    pumpState state;
-    int n;
-    char * str;
+  unsigned int int_args[args_size];
+  unsigned long milliseconds;
+  pumpState state;
+  int n;
+  char * str;
+
+  // DEBUG
+  Serial.print(F("DEBUG: About to execute with identiffer: "));
+  Serial.println(identifier);
+  Serial.print(F("DEBUG: Hex is: "));
+  Serial.println((char) identifier, HEX);
+  //------------------------------
 
   // TODO: Map cases to more meaningful names
   switch (identifier)
@@ -199,6 +206,7 @@ bool CommandParser::execute(char identifier, char *args[], size_t args_size) con
         return false;
 
       config.setSampleDuration(int_args[0]);
+      break;
 
  case 'U':
       if (args_size < 2 || !stringsToIntegers(int_args, args, args_size))
