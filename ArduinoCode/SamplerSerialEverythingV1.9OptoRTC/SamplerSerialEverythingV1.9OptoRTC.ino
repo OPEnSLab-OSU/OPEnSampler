@@ -64,6 +64,7 @@ Likewise, turning off all valves (including flush valve) will automatically shut
 #include "LowPower.h"           // Use Low-Power library from Sparkfun and RTC pin interrupt (P3) to manage sleep and scheduling at same time
 #include <EEPROM.h>             // Will be writing params to non-volatile memory to save between uses
 #include <SPI.h>                // Using SPI hardware to communicate with TPICs
+
 #include "CommandParser.h"
 #include "Configuration.h"
 #include "Defaults.h"
