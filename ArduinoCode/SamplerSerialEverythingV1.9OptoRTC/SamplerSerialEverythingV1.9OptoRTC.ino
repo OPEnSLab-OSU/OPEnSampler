@@ -119,7 +119,6 @@ uint8_t valveNum = 0;  // number of valve relative to current module
 // Bluetooth Serial & Command Parser
 //----------------------------------
 CommandParser BLEParser(',', '|');
-// TODO: Rename
 Adafruit_BLE_UART BLESerial = Adafruit_BLE_UART(bleReqPin, bleRdyPin, bleRstPin);
 
 //----------------------------
@@ -239,8 +238,6 @@ void loop()
     Serial.print(F("Woke up."));
     RTCReportTime();
 
-    // TODO STATUS UPDATE: Status update on wakeup?
-
     // Disable RTC's wakeup interrupt pin
     detachInterrupt(digitalPinToInterrupt(wakeUpPin));
 
@@ -248,8 +245,10 @@ void loop()
     if (config.getValveNumber() >= numValves)
     {
       Serial.println(F("Total number of samples reached! Sleeping forever..."));
-      // TODO STATUS UPDATE: Sleeping forever.
       // warning, because wakeup pin is disabled above, sleep forever, no wakeup from here
+
+      sendSMSAll("OPEnSampler: Total number of samples reached! Sleeping forever...");
+
       sleepEN = true; // Set sleep flag to sleep at end of loop
     }
     else
@@ -270,8 +269,9 @@ void loop()
         config.refreshPeriodicAlarm();
       }
 
-      // TODO STATUS UPDATE: Taking a sample (does this dupe with #1 @ 251)?
       Serial.println(F("Time to take a sample."));
+      sendSMSAll("OPEnSampler: Taking a sample");
+
       previousMillis = millis();  // Remember the time at this point
       SampleState = HIGH; // Trigger new sample cycle, raise sample flag for Loop
       FlushState = HIGH; // Begin sample cycle by flushing system for period of time
