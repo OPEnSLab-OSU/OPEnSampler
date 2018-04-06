@@ -54,10 +54,9 @@ Firmware SAFETY Features:
 Pumps will not turn on if no valves are open at that time.
 Likewise, turning off all valves (including flush valve) will automatically shut off pumps
 */
-
-#include <limits.h>
-
-#include "Adafruit_BLE_UART.h"  // Library for nRF8000 (BLE breakout)
+#include "Adafruit_BLE_UART.h"  // Library for nRF8001 (BLE breakout)
+#include "Adafruit_FONA.h"      // Library for FONA 808 (GSM/SMS breakout)
+#include <SoftwareSerial.h>     // Used with FONA 808 TODO
 #include <Wire.h>               // i2c connection for RTC DS3231
 #include <PinChangeInterrupt.h> // Allows RTC to interrupt on analog pin
 #include <RTClibExtended.h>     // Library to configure DS3231
@@ -88,6 +87,13 @@ const byte rClockPin = 10; // TPIC register clock pin, acts as CS (chip select) 
 const byte bleReqPin = A1; // CS (SPI chip select) pin
 const byte bleRdyPin = 3;  // Interrupt pin for when data is ready
 const byte bleRstPin = A2; // Used to reset board on startup
+
+//----------------------------
+// GSM/SMS Breakout Pins
+//----------------------------
+const byte fonaRXPin = 5;
+const byte fonaTXPin = 6;
+const byte fonaRstPin = 4;
 //----------------------------
 
 volatile bool ledState = 0;
@@ -110,9 +116,20 @@ unsigned char TPICBuffer[4] = {0x00}; // Store Status bits of TPICs, see ValveAd
 uint8_t moduleNum = 0;  // number of module depending on how high valve count is (groups of 25)
 uint8_t valveNum = 0;  // number of valve relative to current module
 
+//----------------------------------
+// Bluetooth Serial & Command Parser
+//----------------------------------
 CommandParser BLEParser(',', '|');
 // TODO: Rename
 Adafruit_BLE_UART BLESerial = Adafruit_BLE_UART(bleReqPin, bleRdyPin, bleRstPin);
+
+//----------------------------
+// FONA 808 for SMS Status Updates
+//----------------------------
+//SoftwareSerial fonaSS = SoftwareSerial(fonaTXPin, fonaRXPin);
+//SoftwareSerial *fonaSerial = &fonaSS;
+Adafruit_FONA fona = Adafruit_FONA(fonaRstPin);
+//----------------------------
 
 RTC_DS3231 RTC;
 
@@ -139,11 +156,25 @@ void setup() {
   }
 
   // Bluetooth Setup (see Bluetooth.ino)
-  BLESerial.setRXcallback(RXCallback);
-  BLESerial.setACIcallback(ACICallback);
-  BLESerial.setDeviceName("Sampler"); // Can be no longer than 7 characters
-  BLESerial.begin();
-  Serial.println(F("Bluetooth initialized."));
+  // TODO Boolean check
+  if (enableBluetooth) {
+    BLESerial.setRXcallback(RXCallback);
+    BLESerial.setACIcallback(ACICallback);
+    BLESerial.setDeviceName("Sampler"); // Can be no longer than 7 characters
+    BLESerial.begin();
+    Serial.println(F("Bluetooth initialized."));
+  }
+
+  // FONA 808 Setup (for SMS status updates)
+  if (enableSMS) {
+    // fonaSerial->begin(4800); // TODO
+    //fonaSerial->begin(115200);
+    //if (! fona.begin(*fonaSerial)) {
+    //  Serial.println(F("ERROR: Couldn't find FONA. Disable enableSMS in Defaults.h if not being used. Hanging..."));
+    //  while(1);
+    //}
+    Serial.println(F("FONA found successful."));
+  }
 
   Serial.print(F("the current Flush duration in ms is: "));
   Serial.println(config.getFlushDuration());
@@ -211,6 +242,8 @@ void loop()
     Serial.print(F("Woke up."));
     RTCReportTime();
 
+    // TODO STATUS UPDATE: Status update on wakeup?
+
     // Disable RTC's wakeup interrupt pin
     detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(wakeUpPin));
 
@@ -218,6 +251,7 @@ void loop()
     if (config.getValveNumber() >= numValves)
     {
       Serial.println(F("Total number of samples reached! Sleeping forever..."));
+      // TODO STATUS UPDATE: Sleeping forever.
       // warning, because wakeup pin is disabled above, sleep forever, no wakeup from here
       sleepEN = true; // Set sleep flag to sleep at end of loop
     }
@@ -239,6 +273,7 @@ void loop()
         config.refreshPeriodicAlarm();
       }
 
+      // TODO STATUS UPDATE: Taking a sample (does this dupe with #1 @ 251)?
       Serial.println(F("Time to take a sample."));
       previousMillis = millis();  // Remember the time at this point
       SampleState = HIGH; // Trigger new sample cycle, raise sample flag for Loop
@@ -269,7 +304,7 @@ void loop()
       config.setValveNumber(config.getValveNumber() + 1);
       config.writeToEEPROM(); // Save new valve number to EEPROM
 
-      Serial.print(F("moving onto sampling valve number "));
+      Serial.print(F("Moving onto sampling valve number "));
       Serial.println(config.getValveNumber());
 
       // Configure TPIC buffers according to current valve, strobe out to SPI

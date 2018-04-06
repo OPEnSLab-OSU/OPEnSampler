@@ -1,3 +1,5 @@
+// TODO: Move documentation comments to header
+
 #pragma once
 
 #include <stdint.h>
@@ -48,7 +50,16 @@ public:
   unsigned long getSampleDuration();
   uint8_t getSampleHour();
   uint8_t getSampleMinute();
-  char * getSMSNumber(int index);
+
+  /**
+   * Get the phone number of an SMS status update recipient.
+   *
+   * @return a pointer to an ASCII phone number, or null if the phone number at
+   * index is undefined. The number is stored without punctuation or whitespace
+   * (e.g. 123456789012345).
+   */
+  char * getSMSNumber(int index); // TODO: const char *?
+
   uint16_t getPeriodicAlarmLength();
   uint8_t getValveNumber();
 

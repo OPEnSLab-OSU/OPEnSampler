@@ -5,7 +5,6 @@
 /* ----------------------
  * Configuration Defaults
  * ----------------------
- *
  * Alter the values below to change the OPEnSampler's default configuration.
  */
 
@@ -36,9 +35,9 @@ const bool SampleValveNumDef = 0;
 /* --------------------
  * Phone Number Storage
  * --------------------
- *
- * WARNING: Raising this too high might may cause instability/crashing if too little dynamic memory
- *          is available, or if the configuration struct becomes too large for EEPROM.
+ * WARNING: Raising this too high might may cause instability/crashing if too
+ * little dynamic memory is available, or if the configuration struct becomes too
+ * large for EEPROM.
  *
  * bytes used = numSMSRecipients * (phoneNumberLength + 1)
  */
@@ -55,3 +54,11 @@ const uint8_t phoneNumberLength = 13;
  */
 const int numValves = 24; // Amount of valves in each module
 const int numModules = 1; // XXX: Unused. 1 master module for now. Will be used to calculate number of shifts to TPICs for expansion modules
+
+/* --------------------
+ * OPEnSampler Features
+ * --------------------
+ */
+// TODO
+const bool enableBluetooth = true;
+const bool enableSMS       = true;
