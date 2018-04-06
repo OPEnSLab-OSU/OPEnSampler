@@ -56,9 +56,8 @@ Likewise, turning off all valves (including flush valve) will automatically shut
 */
 #include "Adafruit_BLE_UART.h"  // Library for nRF8001 (BLE breakout)
 #include "Adafruit_FONA.h"      // Library for FONA 808 (GSM/SMS breakout)
-#include <SoftwareSerial.h>     // Used with FONA 808 TODO
+#include <SoftwareSerial.h>     // Used with FONA 808
 #include <Wire.h>               // i2c connection for RTC DS3231
-#include <PinChangeInterrupt.h> // Allows RTC to interrupt on analog pin
 #include <RTClibExtended.h>     // Library to configure DS3231
 #include "LowPower.h"           // Use Low-Power library from Sparkfun and RTC pin interrupt (P3) to manage sleep and scheduling at same time
 #include <EEPROM.h>             // Will be writing params to non-volatile memory to save between uses
@@ -126,8 +125,8 @@ Adafruit_BLE_UART BLESerial = Adafruit_BLE_UART(bleReqPin, bleRdyPin, bleRstPin)
 //----------------------------
 // FONA 808 for SMS Status Updates
 //----------------------------
-//SoftwareSerial fonaSS = SoftwareSerial(fonaTXPin, fonaRXPin);
-//SoftwareSerial *fonaSerial = &fonaSS;
+SoftwareSerial fonaSS = SoftwareSerial(fonaTXPin, fonaRXPin);
+SoftwareSerial *fonaSerial = &fonaSS;
 Adafruit_FONA fona = Adafruit_FONA(fonaRstPin);
 //----------------------------
 
@@ -156,7 +155,6 @@ void setup() {
   }
 
   // Bluetooth Setup (see Bluetooth.ino)
-  // TODO Boolean check
   if (enableBluetooth) {
     BLESerial.setRXcallback(RXCallback);
     BLESerial.setACIcallback(ACICallback);
@@ -167,12 +165,11 @@ void setup() {
 
   // FONA 808 Setup (for SMS status updates)
   if (enableSMS) {
-    // fonaSerial->begin(4800); // TODO
-    //fonaSerial->begin(115200);
-    //if (! fona.begin(*fonaSerial)) {
-    //  Serial.println(F("ERROR: Couldn't find FONA. Disable enableSMS in Defaults.h if not being used. Hanging..."));
-    //  while(1);
-    //}
+    fonaSerial->begin(115200);
+    if (! fona.begin(*fonaSerial)) {
+      Serial.println(F("ERROR: Couldn't find FONA. Disable enableSMS in Defaults.h if not being used. Hanging..."));
+      while(1);
+    }
     Serial.println(F("FONA found successful."));
   }
 
@@ -245,7 +242,7 @@ void loop()
     // TODO STATUS UPDATE: Status update on wakeup?
 
     // Disable RTC's wakeup interrupt pin
-    detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(wakeUpPin));
+    detachInterrupt(digitalPinToInterrupt(wakeUpPin));
 
     // If target valve number is greater than total number of valves
     if (config.getValveNumber() >= numValves)
@@ -338,7 +335,7 @@ void loop()
       digitalWrite(LED_BUILTIN, SampleState); // indicator LED
 
       // Allow wake up pin to trigger interrupt on low.
-      attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(wakeUpPin), wakeUp, FALLING);
+      attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
       // Allow switch pin to change sampler mode
       attachInterrupt(digitalPinToInterrupt(interruptPin), sampleEN, CHANGE);
 
@@ -366,7 +363,7 @@ void loop()
 void wakeUp()
 {
   // Disable external pin interrupt on wake up pin.
-  //detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(wakeUpPin));
+  //detachInterrupt(digitalPinInterrupt(wakeUpPin));
   timerEN = true; // Enable timed functions
   sleepEN = false; // disable sleep flag in loop
 }// end ISR
@@ -389,19 +386,19 @@ void sampleEN()
       // Serial.print(F("Resetting Alarm 1 for: ")); Serial.print(config.getSampleHour()); Serial.print(F(":"));Serial.println(config.getSampleMinute());
       // clearAlarms();
       // Allow wake up pin from RTC to trigger interrupt on low.
-      attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(wakeUpPin), wakeUp, FALLING);
+      attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
       sleepEN = true; // set sleep flag to enable sleep at end of loop
     }
     else
     {
       // Disable external pin interrupt from RTC on wake up pin.
-      detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(wakeUpPin));
+      detachInterrupt(digitalPinToInterrupt(wakeUpPin));
       Serial.println(F("Sampler timed functions disabled"));
       Serial.println(F("Processor AWAKE and standing by for serial commands"));
       // everythingOff(); // Turn everything off
-      sleepEN = false; //disable sleep flag
-      SampleState = false; // disable sample flag
-      timerEN = false; // disable timed functions flag
+      sleepEN = false;
+      SampleState = false;
+      timerEN = false; // disable timed functions
 
       // We'll just sit awake in loop listening to the serial port
     }
@@ -475,7 +472,7 @@ void RTCReportTime()
  */
 void writeEEPROMDefaults()
 {
-  detachPinChangeInterrupt(digitalPinToPinChangeInterrupt(wakeUpPin));
+  detachInterrupt(digitalPinToInterrupt(wakeUpPin));
   Serial.println(F("Writing EEPROM defaults. . ."));
 
   config.setDefaults();
@@ -486,7 +483,7 @@ void writeEEPROMDefaults()
   uint8_t hour   = config.getSampleHour();
   // RTC.setAlarm(ALM1_MATCH_HOURS, minute, hour, 0);
 
-  attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(wakeUpPin), wakeUp, FALLING);
+  attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
 }
 
 /**
