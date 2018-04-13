@@ -23,6 +23,7 @@ public:
   bool process(char buffer[], uint8_t length) const;
 
 private:
+  // cstrings consisting of parser's delimiter/terminator char and \0 (null terminator)
   char delimiter[2];
   char terminator[2];
 

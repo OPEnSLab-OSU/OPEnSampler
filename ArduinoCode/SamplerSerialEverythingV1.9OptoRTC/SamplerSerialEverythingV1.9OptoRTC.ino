@@ -25,7 +25,7 @@ The features of OPEnS Sampler 1.0 include:
 24 sampler bags, 1 flush valve, 2 peristaltic pumps.
 It takes about 2 min to draw 250ml, or 480ms per ml
 1 Power Switch, 1 Sampler enable switch (because we want independent control of the timed sampler functions without cutting power, features that use this will be explained).
-Serial Command Set, You can communicate with the sampler over USB serial at 115200 Baud.
+Serial Command Set, You can communicate with the sampler over USB serial at baud rate specified in Defaults.h
 
 Arduino Pinouts:
 GPIO2  - Sample enable/disable low-true
@@ -75,15 +75,15 @@ Configuration config;
 //----------------------------
 // Switch Interrupt pin is LOW-True Logic, GND == enabled
 const byte interruptPin = 2;  // Digital pin switch is attached to that enables or disables the sampler timer
-const byte wakeUpPin = A0; // Pin to recieve RTC's wake up interrupt.
-const byte pumpPin1 = 8; // Motor MOSFET attached to digital pin 9,  1=forward, 0=reverse
-const byte pumpPin2 = 9; // Motor MOSFET attached to digital pin 10 0=forward, 1=reverse
-const byte rClockPin = 10; // TPIC register clock pin, acts as CS (chip select) for SPI
+const byte wakeUpPin = A0; // Pin to recieve RTC's wake up interrupt. TODO
+const byte pumpPin1 = 8; // Motor MOSFET 1=forward, 0=reverse
+const byte pumpPin2 = 9; // Motor MOSFET 0=forward, 1=reverse
+const byte rClockPin = 10; // TPIC register clock pin, acts as SPI CS (chip select)
 
 //----------------------------
 // Bluetooth Pins & Serial
 //----------------------------
-const byte bleReqPin = A1; // CS (SPI chip select) pin
+const byte bleReqPin = A1; // SPI CS (chip select) pin
 const byte bleRdyPin = 3;  // Interrupt pin for when data is ready
 const byte bleRstPin = A2; // Used to reset board on startup
 
@@ -95,7 +95,6 @@ const byte fonaTXPin = 6;
 const byte fonaRstPin = 4;
 //----------------------------
 
-volatile bool ledState = 0;
 volatile bool timerEN = false; // Flag to enable or disable sampler timed functions
 volatile bool sleepEN = false; // Flag to check in loop to see if we should sleep or not
 // These maintain the current state
@@ -104,16 +103,10 @@ volatile bool FlushState = LOW;  // used to set state-machine flush flag
 
 volatile unsigned long previousMillis = 0;   // will store last time Sample was taken
 
-int value = 0; // Place to accumulate valve number input (see SerialCommandDefs tab)
-
-//----------------------------
+//---------------------------
 // Valve Addressing Variables
-//----------------------------
-// Amount of modules and valves per module are defined in Defaults.h
-unsigned char TPICBuffer[4] = {0x00}; // Store Status bits of TPICs, see ValveAddressing tab for details
-// uint16_t valveCount = 0;
-uint8_t moduleNum = 0;  // number of module depending on how high valve count is (groups of 25)
-uint8_t valveNum = 0;  // number of valve relative to current module
+//---------------------------
+unsigned char TPICBuffer[4] = {0x00}; // Store status bits of TPICs, see ValveAddressing for details
 
 //----------------------------------
 // Bluetooth Serial & Command Parser
@@ -124,6 +117,9 @@ Adafruit_BLE_UART BLESerial = Adafruit_BLE_UART(bleReqPin, bleRdyPin, bleRstPin)
 //----------------------------
 // FONA 808 for SMS Status Updates
 //----------------------------
+// TODO: This causes infinite loop
+bool enableSMS = true; // Set to false if not using SMS status updates (requires Fona 808)
+
 SoftwareSerial fonaSS = SoftwareSerial(fonaTXPin, fonaRXPin);
 SoftwareSerial *fonaSerial = &fonaSS;
 Adafruit_FONA fona = Adafruit_FONA(fonaRstPin);
@@ -132,9 +128,14 @@ Adafruit_FONA fona = Adafruit_FONA(fonaRstPin);
 RTC_DS3231 RTC;
 
 void setup() {
+  Serial.begin(baud);
+  while (!Serial)
+    delay(1000);
+  Serial.println(F("Beginning setup."));
+
   pinMode(interruptPin, INPUT_PULLUP);
   pinMode(wakeUpPin, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(interruptPin), sampleEN, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(interruptPin), sampleEN, CHANGE); // TODO LEFT OFF HERE
 
   // Read EEPROM into Configuration
   config.readFromEEPROM();
@@ -145,9 +146,6 @@ void setup() {
   pinMode(pumpPin2, OUTPUT); // Set motor pin2 to output
   digitalWrite(pumpPin2, LOW); // Turn off Motor
 
-  Serial.begin(115200);
-  while (!Serial)
-    delay(1000);
   if (!config.getWritten())
   {
     writeEEPROMDefaults();
@@ -164,12 +162,12 @@ void setup() {
 
   // FONA 808 Setup (for SMS status updates)
   if (enableSMS) {
-    fonaSerial->begin(115200);
-    if (! fona.begin(*fonaSerial)) {
-      Serial.println(F("ERROR: Couldn't find FONA. Disable enableSMS in Defaults.h if not being used. Hanging..."));
-      while(1);
-    }
-    Serial.println(F("FONA found successful."));
+    fonaSerial->begin(baud);
+    //if (! fona.begin(*fonaSerial)) {
+    //  Serial.println(F("ERROR: Couldn't find FONA, disabling SMS status updates. Restart to try again."));
+    //  enableSMS = false;
+    //}
+    // TODO
   }
 
   Serial.print(F("the current Flush duration in ms is: "));
@@ -247,7 +245,7 @@ void loop()
       Serial.println(F("Total number of samples reached! Sleeping forever..."));
       // warning, because wakeup pin is disabled above, sleep forever, no wakeup from here
 
-      sendSMSAll("OPEnSampler: Total number of samples reached! Sleeping forever...");
+      sendSMSAll("OPEnSampler: Total number of samples reached! Sleeping.");
 
       sleepEN = true; // Set sleep flag to sleep at end of loop
     }
@@ -366,18 +364,16 @@ void wakeUp()
   //detachInterrupt(digitalPinInterrupt(wakeUpPin));
   timerEN = true; // Enable timed functions
   sleepEN = false; // disable sleep flag in loop
-}// end ISR
+}
 
 // ================================================================
 // Switch Pin Interrupt Service Routine
 // Switch pin is LOW-True Logic, GND == enabled
 // If switch off, disable timed events
-// In on, enable timed events
+// In switch on,  enable  timed events
 // ================================================================
 void sampleEN()
 {
-    Serial.println(F("Sampler EN function"));
-
     bool intPinState = digitalRead(interruptPin);
     if (!intPinState) // Low-true
     {
@@ -496,7 +492,7 @@ void sendConfigOverBluetooth()
   // size_t configSize = 6;
   // uint8_t configData[configSize] = "HELLO";
   size_t configSize = 60;
-  uint8_t configData[configSize + 1] = "HELLOHELLOHELLOHELLOHELLOHELLOHELLOHELLOHELLOHELLOHELLOHELLO";
+  uint8_t configData[configSize + 1] = "HELLO";
   size_t sent, bytesThisPass = 0;
 
   // DEBUG

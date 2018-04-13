@@ -5,6 +5,9 @@ extern Configuration config;
  */
 void sendSMSAll(char * message)
 {
+  // Do nothing if SMS functionality isn't enabled
+  if (! enableSMS) return;
+  
   uint8_t status = fona.getNetworkStatus();
 
   // TODO: Does this help?

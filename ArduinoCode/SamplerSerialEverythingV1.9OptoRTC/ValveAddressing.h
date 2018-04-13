@@ -1,12 +1,9 @@
 #pragma once
 
-#include <stddef.h>
-
 enum class pumpState { ON, OFF, REVERSE };
 
 extern const byte pumpPin1;
 extern const byte pumpPin2;
-// TODO: Why here?
 
 void everythingOff();
 void flushON();

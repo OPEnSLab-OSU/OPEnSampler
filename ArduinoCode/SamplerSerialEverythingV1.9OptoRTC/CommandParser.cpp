@@ -128,7 +128,6 @@ bool CommandParser::execute(char identifier, char *args[], size_t args_size) con
   Serial.println((char) identifier, HEX);
   //------------------------------
 
-  // TODO: Map cases to more meaningful names
   switch (identifier)
   {
     case 'B':
@@ -179,7 +178,6 @@ bool CommandParser::execute(char identifier, char *args[], size_t args_size) con
       if (args_size < 1)
         return false;
 
-      // TODO: Remove need for integer representation -> enum conversion
       n = (int) strtol(args[0], NULL, 10);
 
       if (n == 0L) {

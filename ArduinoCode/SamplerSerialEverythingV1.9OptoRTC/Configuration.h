@@ -1,14 +1,10 @@
-// TODO: Move documentation comments to header
-
 #pragma once
 
-#include <stdint.h>
-#include <Arduino.h>
-#include <RTClibExtended.h> // Library to configure DS3231
 #include "Defaults.h"
 
 enum class Mode {DAILY, PERIODIC};
 
+// Values are stored in a struct within the Configuration class to make them easy to copy to/from EEPROM
 struct config_t {
   Mode mode; // Mode of sample alarm
   bool written; // Has EEPROM been written to?
@@ -22,7 +18,12 @@ struct config_t {
   char SMSNumbers[numSMSRecipients][phoneNumberLength+1]; // Phone numbers for SMS status update recipients
 };
 
-// Struct for saving Sampler params in EEPROM, see http://playground.arduino.cc/Code/EEPROMWriteAnything
+/**
+ * Stores OPEnSampler's configuration values
+ *
+ * Storing configuration in this class (as opposed to global struct like in earlier iterations) ensures these
+ * values are accessed/updated/validated consistently.
+ */
 class Configuration
 {
 public:
@@ -50,16 +51,7 @@ public:
   unsigned long getSampleDuration();
   uint8_t getSampleHour();
   uint8_t getSampleMinute();
-
-  /**
-   * Get the phone number of an SMS status update recipient.
-   *
-   * @return a pointer to an ASCII phone number, or null if the phone number at
-   * index is undefined. The number is stored without punctuation or whitespace
-   * (e.g. 123456789012345).
-   */
-  char * getSMSNumber(int index); // TODO: const char *?
-
+  char * getSMSNumber(int index);
   uint16_t getPeriodicAlarmLength();
   uint8_t getValveNumber();
 

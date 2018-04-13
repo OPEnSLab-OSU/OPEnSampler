@@ -1,7 +1,6 @@
-#include <Arduino.h>
+#include <RTClibExtended.h> // Library to configure DS3231
 #include "EEPROMAnything.h" // For reading/writing to EEPROM
 #include "Configuration.h"
-#include "Defaults.h"
 
 extern RTC_DS3231 RTC;
 

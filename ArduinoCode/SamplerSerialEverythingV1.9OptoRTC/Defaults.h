@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdint.h>
-
 /* ----------------------
  * Configuration Defaults
  * ----------------------
@@ -32,6 +30,7 @@ const uint8_t SampleVolMlDef = 250;
 // This value + 1 will be the next valve to draw a sample.
 const bool SampleValveNumDef = 0;
 
+
 /* --------------------
  * Phone Number Storage
  * --------------------
@@ -48,17 +47,26 @@ const uint8_t numSMSRecipients = 3;
 // Maximum number of digits in a phone number
 const uint8_t phoneNumberLength = 13;
 
+
 /* -----------------------
  * OPEnSampler Information
  * -----------------------
  */
-const int numValves = 24; // Amount of valves in each module
-const int numModules = 1; // XXX: Unused. 1 master module for now. Will be used to calculate number of shifts to TPICs for expansion modules
+const int numValves = 24; // Amount of valves in each module (currently only supports 1 module)
+
 
 /* --------------------
  * OPEnSampler Features
  * --------------------
  */
-// TODO
+// TODO: Decide how to handle value location
+// Maybe make enableSMS const and use another value for tracking it?
 const bool enableBluetooth = true;
-const bool enableSMS       = true;
+extern bool enableSMS; // Whether to send SMS status updates (set in SamplerSerialEverything)
+
+
+/* --------------------
+ * Miscellaneous
+ * --------------------
+ */
+const uint32_t baud = 115200; // BAUD rate for USB serial (when debugging ensure serial monitor matches)
