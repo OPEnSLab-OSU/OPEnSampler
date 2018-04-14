@@ -42,7 +42,7 @@ void RXCallback(uint8_t *buffer, uint8_t length)
 
   for(int i = 0; i < length; i++)
   {
-    Serial.print(" 0x");
+    Serial.print(F(" 0x"));
     Serial.print((char) buffer[i], HEX);
   }
 

@@ -67,7 +67,7 @@ void flushON()
 
   TPICBuffer[3] |= 0x01;   // TPICBuffer[3] is LSB
                                // Logical OR so as not to blow out other bits
-  Serial.println(F("Flushing System . . ."));
+  Serial.println(F("Flushing System ..."));
 
   // Strobe TPIC buffer data to TPICS via SPI
   strobeTPICs();
@@ -81,7 +81,7 @@ void flushOFF()
   TPICBuffer[3] &= 0xFE;   // TPICBuffer[3] is LSB
                                // Logical AND so as not to blow out other bits
 
-  Serial.println(F("Flush Off . . ."));
+  Serial.println(F("Flush Off ..."));
 
   // Strobe TPIC buffer data to TPICS via SPI
   strobeTPICs();

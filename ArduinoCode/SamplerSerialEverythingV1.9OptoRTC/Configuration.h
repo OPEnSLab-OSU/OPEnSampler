@@ -13,7 +13,6 @@ struct config_t {
   uint16_t periodicAlarmMinutes; // Time (in minutes) between samples in Periodic mode
   unsigned long flushDurationMs; // How long to perform a flush (in milliseconds)
   unsigned long sampleDurationMs; // How long to draw a sample (in milliseconds)
-  uint16_t sampleVolumeMl; // Sample volume in ml (currently unused)
   uint8_t valveNumber; // Current number of valves sampled, 0=reset/default
   char SMSNumbers[numSMSRecipients][phoneNumberLength+1]; // Phone numbers for SMS status update recipients
 };

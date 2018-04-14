@@ -22,10 +22,6 @@ const uint16_t SampleDurMsDef = 30000; // 30 seconds
 // Number of milliseconds to run pumps for when flushing.
 const uint16_t FlushDurMsDef  = 30000; // 30 seconds
 
-// Volume in milliliters of each sample container
-// (This is currently unused, but could be used in the future with safety calculations.)
-const uint8_t SampleVolMlDef = 250;
-
 // The current active valve number.
 // This value + 1 will be the next valve to draw a sample.
 const bool SampleValveNumDef = 0;
@@ -42,10 +38,10 @@ const bool SampleValveNumDef = 0;
  */
 
 // Quantity of phone numbers to store in EEPROM that will recieve SMS status updates.
-const uint8_t numSMSRecipients = 3;
+const uint8_t numSMSRecipients = 2;
 
 // Maximum number of digits in a phone number
-const uint8_t phoneNumberLength = 13;
+const uint8_t phoneNumberLength = 11;
 
 
 /* -----------------------

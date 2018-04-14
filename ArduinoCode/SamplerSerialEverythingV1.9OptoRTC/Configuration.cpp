@@ -14,7 +14,6 @@ void Configuration::setDefaults()
   configData.periodicAlarmMinutes = SampleAlarmPerDef;
   configData.flushDurationMs = FlushDurMsDef;
   configData.sampleDurationMs = SampleDurMsDef;
-  configData.sampleVolumeMl = SampleVolMlDef;
   configData.valveNumber = SampleValveNumDef;
   configData.written = false;
   configData.mode = Mode::DAILY;
@@ -138,7 +137,7 @@ void Configuration::setPeriodicAlarm(unsigned int minutes)
     Serial.print(milliseconds);
     Serial.print(F(" ms). Must be greater than flush and sample durations combined: "));
     Serial.print(minimum);
-    Serial.println(" ms");
+    Serial.println(F(" ms"));
     return;
   }
 
