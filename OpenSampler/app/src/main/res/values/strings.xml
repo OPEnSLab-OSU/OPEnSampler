@@ -4,7 +4,30 @@
     <string-array name="schedItems">
         <item>Periodic</item>
         <item>Daily</item>
-        <item>Custom</item>
     </string-array>
 
+    <string-array name="phoneActions">
+        <item>Add</item>
+        <item>Remove</item>
+        <item>Update</item>
+    </string-array>
+
+    <string-array name="phoneNumbers">
+        <item>5033829015</item>
+        <item>1234567890</item>
+        <item>4518746587</item>
+    </string-array>
+
+    <string name="ble_not_supported">Bluetooth Low Energy not supported</string>
+    <string name="scan">Scan</string>
+    <string name="cancel">Cancel</string>
+    <string name="paired">paired</string>
+    <string name="no_device">&lt;Select a device&gt;</string>
+    <string name="select_device">Select a device</string>
+    <string name="scanning">Scanning for devices...</string>
+    <string name="device">Device:</string>
+    <string name="connectBut">Connect</string>
+    <string name="sampleBut">Samples</string>
+    <string name="scheduleBut">Schedule</string>
+    <string name="phonesBut">Phone</string>
 </resources>

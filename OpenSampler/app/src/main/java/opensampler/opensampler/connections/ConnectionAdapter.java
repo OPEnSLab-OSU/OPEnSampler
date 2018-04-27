@@ -44,7 +44,6 @@ public class ConnectionAdapter extends RecyclerView.Adapter<ConnectionAdapter.Vi
         return mDataSet.length;
     }
 
-
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener
     {
         private final TextView textView;

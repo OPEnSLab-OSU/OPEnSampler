@@ -3,7 +3,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#78aee1">
+    android:background="@color/colorPrimary">
 
     <TextView
         android:id="@+id/textTitle"
@@ -17,16 +17,7 @@
         android:layout_centerHorizontal="true" />
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/btnNavFrag2"
-        android:text="Go to Samples"
-        android:layout_below="@+id/textTitle"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
-
-    <Button
-        android:id="@+id/btnNavSecondActivity"
+        android:id="@+id/timeSelectorActivity"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Go to Connection Activity"
@@ -37,13 +28,15 @@
         android:id="@+id/connRecView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/btnNavFrag2"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="15dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
+        android:requiresFadingEdge="horizontal"
+        android:fadingEdgeLength="40dp"
         android:layout_marginBottom="50dp"
-        android:background="#0a98f1"/>
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginLeft="10dp"
+        android:background="@color/colorAccent"
+        android:layout_below="@+id/textTitle"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 
 </RelativeLayout>

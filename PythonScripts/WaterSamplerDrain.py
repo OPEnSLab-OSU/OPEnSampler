@@ -33,7 +33,7 @@ time.sleep(3)
 
 """
 ## open Valve 1
-ser.write(b'V1 1\r')
+ser.write(b'VS 1 1\r')
 time.sleep(1)
 ## Turn Motor on reverse
 ser.write(b'M -1'\r)
@@ -50,8 +50,8 @@ else:
     motorOn = 'M1 \r\n'
 
 
-FlushOff = 'V0 0\r\n'
-FirstValveOn = 'V1 1\r\n'
+FlushOff = 'VS 0 0\r\n'
+FirstValveOn = 'VS 1 1\r\n'
 motorOff = 'M0 \r\n'
 
 
@@ -86,7 +86,7 @@ time.sleep(pumpTime)
 for i in range(firstBag, numBags+1):
     ##Make new valve string, Vn set based on lumber interation into loop
     ## found on https://stackoverflow.com/questions/5309978/sprintf-like-functionality-in-python
-    buf = 'V%d 1\r\n' % i
+    buf = 'VS %d 1\r\n' % i
     print(buf)
     ser.write(buf.encode('ascii'))
     ## resend motor on signal in case it turnes off accidentally
