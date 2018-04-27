@@ -26,8 +26,7 @@
     <string name="select_device">Select a device</string>
     <string name="scanning">Scanning for devices...</string>
     <string name="device">Device:</string>
-    <string name="connectBut">Connect</string>
-    <string name="sampleBut">Samples</string>
-    <string name="scheduleBut">Schedule</string>
-    <string name="phonesBut">Phone</string>
+
+
+
 </resources>

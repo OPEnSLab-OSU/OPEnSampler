@@ -216,7 +216,6 @@ public class ScheduleFragment extends Fragment {
         sampleLengthPeriodic.setVisibility(view.INVISIBLE);
         sampleLengthPeriodicText.setVisibility(view.INVISIBLE);
 
-        msubmitSched.setEnabled(false);
 
         // This is for a secondary activity inside the schedule in case we want to add that later
         btnNavSecondActivity.setOnClickListener(new View.OnClickListener() {
@@ -338,7 +337,7 @@ public class ScheduleFragment extends Fragment {
                     if (btnConnect.getText().equals("Connect")){
 
                         //Connect button pressed, open DeviceListActivity class, with popup windows that scan for devices
-                        Log.d(TAG, "STARTING DEVICE LIST ACTIVITY");
+
                         Intent newIntent = new Intent(getActivity(), DeviceListActivity.class);
                         startActivityForResult(newIntent, REQUEST_SELECT_DEVICE);
                     } else {
@@ -387,9 +386,7 @@ public class ScheduleFragment extends Fragment {
         public void onReceive(Context context, Intent intent) {
             //all broadcasts are given an intent, intent.getaction is the action specified by the broadcast
             //the action is used to determine what needs to change in the ui such as changing the connect button to disconnect
-            //currently not receiving broadcasts for some reason
             String action = intent.getAction();
-            Log.d(TAG, "Received action was " + action);
 
             final Intent mIntent = intent;
             //*********************//
@@ -399,11 +396,11 @@ public class ScheduleFragment extends Fragment {
                         String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
                         Log.d(TAG, "UART_CONNECT_MSG");
                         btnConnect.setText("Disconnect");
-                        //edtMessage.setEnabled(true);
+                        edtMessage.setEnabled(true);
                         msubmitSched.setEnabled(true);
                         ((TextView) getActivity().findViewById(R.id.deviceName)).setText(mDevice.getName()+ " - ready");
                         listAdapter.add("["+currentDateTimeString+"] Connected to: "+ mDevice.getName());
-                        //messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
+                        messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
                         mState = UART_PROFILE_CONNECTED;
                     }
                 });
@@ -416,7 +413,7 @@ public class ScheduleFragment extends Fragment {
                         String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
                         Log.d(TAG, "UART_DISCONNECT_MSG");
                         btnConnect.setText("Connect");
-                        //edtMessage.setEnabled(false);
+                        edtMessage.setEnabled(false);
                         msubmitSched.setEnabled(false);
                         ((TextView) getActivity().findViewById(R.id.deviceName)).setText("Not Connected");
                         listAdapter.add("["+currentDateTimeString+"] Disconnected to: "+ mDevice.getName());
