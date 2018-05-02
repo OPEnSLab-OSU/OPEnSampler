@@ -1,5 +1,5 @@
 /*
-  OPEnS Water sampler Firmware Version 1.97
+  OPEnS Water sampler Firmware Version 1.95
   Chet Udell, Mitch Nelke, Cara Walter, 2018
 
   New in this version:
@@ -14,7 +14,6 @@
   SPIfunctions.ino
   SerialCommandDefs.ino
   ValveAddressing.ino
-  SamplerFunctions.h
 
   Dependencies:
   Saving Sampler params in EEPROM, include files from here:
@@ -25,9 +24,6 @@
 
   And Sparkfun Low Power Library:
   https://github.com/rocketscream/Low-Power/archive/master.zip
-
-  Include Timer Library from here:
-  https://github.com/stevemarple/AsyncDelay/
 
   RTC and RTCLib-extended tutorial/reference:
   http://www.instructables.com/id/Arduino-Sleep-and-Wakeup-Test-With-DS3231-RTC/
@@ -92,7 +88,6 @@
 #include <EEPROM.h>     // Will be writing params to non-volatile memory to save between uses
 #include "EEPROMAnything.h" // EEPROM read/write functions
 #include <SPI.h>        // Using SPI hardware to communicate with TPICs
-#include <SamplerFunctions.h> //functions for rinsing and priming
 
 const byte eepromValidationValue = 99; // Value to test to see if EEPROM has been written before
 // Determine Sampler "Factory Default" behaviour. These can be changed and saved using the SerialCommandDefs (see tab with same label)
@@ -103,12 +98,17 @@ const uint16_t SampleAlarmPerDef = 3; // Default sample period time, 3 min for t
 
 //base instead on pump timing and do calculations (e.g. 500 mL/min)
 const uint16_t SampleDurMsDef = 30000; // Factory Default 30 sec, takes 60 seconds for 250ml so - don't overfill, How long pumps should run to take one sample, in ms (pump version 2)
-const uint16_t FlushDurMsDef = 30000; // Factory default, low long in ms to flush system
+const uint16_t FlushDurMsDef = 10000; // Factory default, low long in ms to flush system
+const uint16_t BagFlushDurMsDef = 320; // Factory default
+const uint8_t BagDrawDurMsDef = BagFlushDurMsDef * 5;
+uint8_t numRinseDef = 3; //number of times to rinse sampler before taking a sample
+uint8_t currRinse = numRinseDef; //number of rinses prior to current sample
+
 const uint8_t SampleVolMlDef = 250;  // Factory Default, sample vol in ml, 250ml takes about 2min, or about 480ms per ml (pump version 1)
 const bool SampleValveNumDef = 0; // Factory Default, current valve number
 
 // Switch Interrupt pin is LOW-True Logic, GND == enabled
-const byte interruptPin = 2;  // Digital pin switch is attached to that enables or dissables the sampler timer
+const byte interruptPin = 2;  // Digital pin switch is attached to that enables or disables the sampler timer
 const byte wakeUpPin = 3; // Use pin 3 as wake up pin
 const byte pumpPin1 = 8; // Motor MOSFET attached to digital pin 9,  1=forward, 0=reverse
 const byte pumpPin2 = 9; // Motor MOSFET attached to digital pin 10 0=forward, 1=reverse
@@ -141,24 +141,6 @@ struct config_t
   //  bool Is_Period;
 
 } configuration;
-
-//----------------------------
-//Sampler function definitions
-//----------------------------
-volatile long stateTimerMS = 0;  // Initialize state timer
-volatile bool sequenceFlag = false; // Is set True when timer has run its course
-volatile int programCounter = 0; // counter to step through program array
-
-// This array determines the sequence of actions to take
-// during a sample condition, see action library below
-const short myProgram[] = {5, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0};
-
-// This array determines the timing of the above actions sequence numbers
-// during a sample condition, see action library below
-const uint16_t myTimes[] = {5000, 250, 600, 600, 250, 3000, 250, 600, 600, 250, 4000};
-
-// create instance of SamplerFunctions
-SamplerFunctions funcLibrary;
 
 //----------------------------
 // Valve Addressing Variables
@@ -205,7 +187,7 @@ void setup() {
   Serial.print(F("The current main line flush duration in ms is: "));
   Serial.println(configuration.FDMs);
   Serial.print(F("The current bag flush duration in ms is: "));
-  Serial.println(configuration.BFDMs);
+  Serial.println(BagFlushDurMsDef);
   Serial.print(F("The current number of pre-sample rinses is: "));
   Serial.println(configuration.numR);
   Serial.print(F("The current sample duration in ms is: "));
@@ -264,22 +246,6 @@ void setup() {
 
   // Read switch pin to enable or disable sampler on startup
   sampleEN();
-
-  //Setup for program sequence
-  sequenceFlag = true;
-
-  Serial.print("My program sequence is this many steps: ");
-  Serial.println(sizeof(myProgram) >> 1);
-
-  Serial.print("My program sequence is this many steps: ");
-  Serial.println(sizeof(myTimes) >> 1);
-
-  // If program array and timing array not same size, report to user, hang up program
-  if ((sizeof(myProgram) >> 1) != (sizeof(myTimes) >> 1))
-  {
-    Serial.print("Program array and Timing array not same size, please check your code");
-    while (true);
-  }
 }
 
 // the loop function runs over and over again forever
@@ -306,14 +272,6 @@ void loop() {
     {
       Serial.println(F("Setting up for next sample"));
       SampleState = HIGH; // Trigger new sample cycle, raise sample flag for Loop
-      sequenceFlag = true;
-
-      // Advance and save valve number
-      configuration.VNum = configuration.VNum + 1; // Increment valve number
-      configuration.written = eepromValidationValue; // ensure we remember we've written new value to EEPROM
-      EEPROM_writeAnything(0, configuration); // SAVE new Valve Number in EEPROM
-      Serial.print(F("Moving onto valve number ")); Serial.println(configuration.VNum);
-
       // Disable external pin interrupt on wake up pin.
       detachInterrupt(digitalPinToInterrupt(interruptPin));
 
@@ -334,220 +292,281 @@ void loop() {
   }
   else if (SampleState) // Will be TRUE if new sample alarm ISR has been triggered
   {
-    if (currentMillis == 0)
+    if (previousMillis == 0)  //True if hasn't started timer yet - first time in the loop for this sample
     {
-      if (sequenceFlag)  //True if set to run sequence
+      // Advance and save valve number
+      configuration.VNum = configuration.VNum + 1; // Increment valve number
+      configuration.written = eepromValidationValue; // ensure we remember we've written new value to EEPROM
+      EEPROM_writeAnything(0, configuration); // SAVE new Valve Number in EEPROM
+      Serial.print(F("Moving onto rinsing valve number ")); Serial.println(configuration.VNum);
+
+      // Start flush
+      clearValveBits();  // Clear Valve Control bits, don't override Flush bit
+      Serial.println(F("Turning on motor and opening valve to flush main line for first rinse in cycle 1"));
+      flushON(); // Turn Flush Valve on
+      //Turn Motor on
+      setPump(1); // draw inwards
+
+      previousMillis = millis();  // Remember the time at this point
+      Serial.print(F("Main flush start time: ")); Serial.println(previousMillis);
+      Serial.print(F("FlushState: ")); Serial.println(FlushState);
+      delay(100);
+    }
+    else if ((previousMillis > 0) && (currRinse > 0)) //True if have not reached 0: counting down number of rinses
+    {
+      //check time
+      currentMillis = millis();
+      if ((FlushState == 0) || (FlushState == 2)) //True if in main flush state
       {
-        // unset timer flag because this should only be executed when timer has run out
-        sequenceFlag = false;
-
-        // get member function pointer from array,
-        // determined by programCounter sequencing through
-        // program counter Array
-        SamplerFunctions::GeneralFunction f = SamplerFunctions::doActionsArray [myProgram[programCounter]];
-        // call the function
-        (funcLibrary.*f) ();
-
-        //Update the time to execute this next function:
-        stateTimerMS = myTimes[programCounter];
-
-        Serial.print("Executing Action number: ");
-        Serial.print(myProgram[programCounter]);
-        Serial.print(" for ");
-        Serial.print(stateTimerMS);
-        Serial.println("ms");
-
-
-        // Start a new timer based on
-        delayTimer.start(stateTimerMS, AsyncDelay::MILLIS);
-      }
-
-      // Check if timer has finished, AND if timerEN are enabled
-      // if so, set sequenceFlag to step through next function
-      if (delayTimer.isExpired() && timerEN)
-      {
-        // Set Timer Flag
-        sequenceFlag = true;
-
-        // INC Program Counter if we're not done with program
-        if (programCounter < ((sizeof(myProgram) >> 1) - 1))
+        // if reached end of main line flush time
+        if (currentMillis - previousMillis >= configuration.FDMs)
         {
-          programCounter++;    // INC Program Counter
-          delayTimer.repeat(); // Restart Timer
-        }
-      }
-      else
-      { // Else turn program sequence off
-        sequenceFlag = false;  // No more timer
-        timerEN = false; // No more master sample enable
-        currentMillis = millis();
-        Serial.print("Done With Program Sequence of Actions!");
-      } //end programmed sequence prior to sample
+          Serial.print(F("Main line flush finished. Turning off motor and closing all valves at ")); Serial.println(currentMillis);
+          
+          everythingOff();
 
-      else //True if finished programmed sequence
-      {
-        if ((FlushState > 0) && (currentMillis - previousMillis >= (configuration.BFDMs + 200))) // need to figure out what this is going to do instead
-        { 
-          // enter Sample Mode
-          Serial.print(F("Turning on valve number ")); Serial.println(configuration.VNum);
-          setValveBits();    // turn on bag valve
-          flushOFF();        // Turn off flush valve here
-          Serial.println(F("Turning on pump to take sample."));
-          setPump(1);   // Turn on pump, draw sample in
-        }
-        else if ((FlushState == 0) && ((currentMillis - previousMillis) < (configuration.SDMs))) // If Sample is being actively drawn, this will be true
-        {
-          delay(1000);
-          Serial.println(F("Re-sending Courtesy Valve Signal"));
+          FlushState = FlushState + 1; //advance to rinse stage 1 or 3
+          previousMillis = millis(); //get start time
+          Serial.print(F("Advance to FlushState: ")); Serial.print(FlushState); Serial.print(F(" at ")); Serial.println(previousMillis);
+          delay(100);
+          // Configure TPIC buffers according to current valve, strobe out to SPI
+          setValveBits();
           flushOFF();
-          setValveBits();  // Resend Valve signal at periodic rate because noise from brushed motor may turn this off
+          if (FlushState == 1)
+          {
+            Serial.print(F("Drawing water out of valve number ")); Serial.println(configuration.VNum);
+            setPump(-1);// draw small amount (3 mL) of air/water out until BagFlushDurMsDef
+          }
+          else
+          {
+            Serial.print(F("Pumping rinse water into valve number ")); Serial.println(configuration.VNum);
+            setPump(1);// draw small amount (3 mL) of water in
+          }
         }
-        else if ((FlushState == 0) && ((currentMillis - previousMillis) >= (configuration.SDMs))) //if sampling is done, this will be true
-        { // Exit Sample Mode and enter Wait Mode
-          SampleState = LOW;  // Turn Sample off, lower flag for loop
-          previousMillis = 0;
-          //reset number of rinses
-          currRinse = configuration.numR;
+      }
 
-          // Also Turn off sample valve here
-          Serial.print(F("Finished sampling, turning off motors and sample valve at ")); Serial.println(currentMillis);
-          everythingOff(); // Turn everything off
-          digitalWrite(LED_BUILTIN, SampleState); // indicator LED
+      else if (FlushState == 1) //in first stage: draw air/water out of bag
+      {
+        //if reached end of bag withdraw
+        if (currentMillis - previousMillis >= (BagDrawDurMsDef)) //offset to make sure all gets drawn out
+        {
+          Serial.print(F("Done drawing air or water our of current valve. Turning off motor and closing all valves at "));  Serial.println(currentMillis);
+          
+          // turn off pump and close all valves
+          everythingOff();
 
-          // Allow wake up pin to trigger interrupt on low.
-          attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
-          // Allow switch pin to change sampler mode
-          attachInterrupt(digitalPinToInterrupt(interruptPin), sampleEN, CHANGE);
-
-          // Clear Timer EN
-          timerEN = false; // disable timed functions
-          // Enter power down state with ADC and BOD module disabled.
-          // Wake up when wake up pin via RTC is exerted low.
-          sleepEN = true; // Set sleep flag to sleep at end of loop
-
+          FlushState = FlushState + 1; //advance to rinse stage 2 - flush main line
+          previousMillis = millis(); // get start time
+          Serial.print(F("Turning on motor and opening flush valve to flush main line for second rinse in cycle ")); Serial.println(configuration.numR - currRinse + 1);
+          Serial.print(F("Advance to FlushState: ")); Serial.print(FlushState); Serial.print(F(" at ")); Serial.println(previousMillis);
+          delay(100);
+          // open flush valve
+          flushON();
+          //draw in water until FlushDirMsDef
+          setPump(1);
         }
-      }  // End Sample cycle
-    }  // End Sample State-machine
+      }
 
-    // listen for serial:
-    listenForSerial();
-
-    // Should we go to sleep?
-    sleepcheck();
-  } // End Loop
-
-  // ================================================================
-  // Timer ISR, Execute every sample period
-  // ================================================================
-
-  void wakeUp()
-  {
-    // Disable external pin interrupt on wake up pin.
-    //detachInterrupt(digitalPinToInterrupt(wakeUpPin));
-    timerEN = true; // Enable timed functions
-    sleepEN = false; // disable sleep flag in loop
-  }// end ISR
-
-  // ================================================================
-  // Switch Pin Interrupt Service Routine
-  // Switch pin is LOW-True Logic, GND == enabled
-  // If switch off, dissable timed events
-  // In on, enable timed events
-  // ================================================================
-  void sampleEN()
-  {
-    Serial.println(F("Sampler EN function"));
-
-    bool intPinState = digitalRead(interruptPin);
-    if (!intPinState) // Low-true
+      else if (FlushState == 3) //in third stage - 3 mL to bag valve
+      {
+        //if reached end of bag timer
+        if (currentMillis - previousMillis >= BagFlushDurMsDef)
+        {
+          //advance number of rinses
+          currRinse = currRinse - 1;
+          if (currRinse == 0) //just finished last rinse
+          {
+            Serial.print(F("Rinse cycle finished: Drawing water out of valve number ")); Serial.println(configuration.VNum);
+            //open bag valve to remove last bit of water/air before moving on to sampling
+            setValveBits();    // open bag valve
+            setPump(-1);// draw small amount (3 mL) of water out
+          }
+          else //more rinses for this cycle
+          {
+            Serial.print(F("Valve flush finished. Turning off motor and closing all valves at "));  Serial.println(currentMillis);
+            everythingOff();
+            previousMillis = millis(); // get start time
+            Serial.print(F("Turning on motor and opening valve to flush main line for first rinse in cycle ")); Serial.println(configuration.numR - currRinse+1);
+            // open flush valve
+            flushON();
+            //draw in water until FlushDirMsDef
+            setPump(1);
+            FlushState = 0;
+          }
+        }
+      } //end else if FlushState == 3
+    } //end rinse cycle
+    else //True if not first time in loop for this sample, and finshed number of desired rinses
     {
-      Serial.println(F("Sampler timed functions enabled"));
-      // RTC.setAlarm(ALM1_MATCH_HOURS, configuration.SAMin, configuration.SAHr, 0);
-      // Serial.print(F("Resetting Alarm 1 for: ")); Serial.print(configuration.SAHr); Serial.print(F(":"));Serial.println(configuration.SAMin);
-      // clearAlarms();
-      // Allow wake up pin from RTC to trigger pin 3 interrupt on low.
-      attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
-      sleepEN = true; // set sleep flag to enable sleep at end of loop
-    }
-    else
-    {
-      // Disable external pin interrupt from RTC on wake up pin.
-      detachInterrupt(digitalPinToInterrupt(wakeUpPin));
-      Serial.println(F("Sampler timed functions disabled"));
-      Serial.println(F("Processor AWAKE and standing by for serial commands"));
-      //      everythingOff(); // Turn everything off
-      sleepEN = false; //disable sleep flag
-      SampleState = false; // disable sample flag
-      timerEN = false; // disable timed functions flag
+      // check time
+      currentMillis = millis();
 
-      // We'll just sit awake in loop listening to the serial port
-    }
-  }
+      if ((FlushState > 0) && (currentMillis - previousMillis >= (BagDrawDurMsDef))) //if finished last bag rinse stage
+      { // End rinses
+        Serial.print(F("Valve flush finished for last rinse. Turning off motor and closing all valves at "));  Serial.println(currentMillis);
+        everythingOff();
+        //reset rinse stage
+        FlushState = 0;
+        Serial.print(F("Performed ")); Serial.print(configuration.numR); Serial.println(F(" rinses"));
 
-  // ================================================================
-  // Other Functions
-  // ================================================================
-  void clearAlarms()
+        // enter Sample Mode
+        Serial.print(F("Turning on valve number ")); Serial.println(configuration.VNum);
+        setValveBits();    // turn on bag valve
+        flushOFF();        // Turn off flush valve here
+        Serial.println(F("Turning on pump to take sample."));
+        setPump(1);   // Turn on pump, draw sample in
+      }
+      else if ((FlushState == 0) && ((currentMillis - previousMillis) < (configuration.SDMs))) // If Sample is being actively drawn, this will be true
+      {
+        delay(1000);
+        Serial.println(F("Re-sending Courtesy Valve Signal"));
+        flushOFF();
+        setValveBits();  // Resend Valve signal at periodic rate because noise from brushed motor may turn this off
+      }
+      else if ((FlushState == 0) && ((currentMillis - previousMillis) >= (configuration.SDMs))) //if sampling is done, this will be true
+      { // Exit Sample Mode and enter Wait Mode
+        SampleState = LOW;  // Turn Sample off, lower flag for loop
+        previousMillis = 0;
+        //reset number of rinses
+        currRinse = configuration.numR;
+
+        // Also Turn off sample valve here
+        Serial.print(F("Finished sampling, turning off motors and sample valve at ")); Serial.println(currentMillis);
+        everythingOff(); // Turn everything off
+        digitalWrite(LED_BUILTIN, SampleState); // indicator LED
+
+        // Allow wake up pin to trigger interrupt on low.
+        attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
+        // Allow switch pin to change sampler mode
+        attachInterrupt(digitalPinToInterrupt(interruptPin), sampleEN, CHANGE);
+
+        // Clear Timer EN
+        timerEN = false; // disable timed functions
+        // Enter power down state with ADC and BOD module disabled.
+        // Wake up when wake up pin via RTC is exerted low.
+        sleepEN = true; // Set sleep flag to sleep at end of loop
+
+      }
+    }  // End Sample cycle
+  }  // End Sample State-machine
+
+  // listen for serial:
+  listenForSerial();
+
+  // Should we go to sleep?
+  sleepcheck();
+} // End Loop
+
+// ================================================================
+// Timer ISR, Execute every sample period
+// ================================================================
+
+void wakeUp()
+{
+  // Disable external pin interrupt on wake up pin.
+  //detachInterrupt(digitalPinToInterrupt(wakeUpPin));
+  timerEN = true; // Enable timed functions
+  sleepEN = false; // disable sleep flag in loop
+}// end ISR
+
+// ================================================================
+// Switch Pin Interrupt Service Routine
+// Switch pin is LOW-True Logic, GND == enabled
+// If switch off, dissable timed events
+// In on, enable timed events
+// ================================================================
+void sampleEN()
+{
+  Serial.println(F("Sampler EN function"));
+
+  bool intPinState = digitalRead(interruptPin);
+  if (!intPinState) // Low-true
   {
-    //clear any pending alarms
-    RTC.armAlarm(1, false);
-    RTC.clearAlarm(1);
-    //  RTC.alarmInterrupt(1, false);
-    //  RTC.armAlarm(2, false);
-    //  RTC.clearAlarm(2);
-    //  RTC.alarmInterrupt(2, false);
-  }
-
-  void sleepcheck()
-  {
-    if (sleepEN)
-    {
-      Serial.println(F("Going to sleep"));
-      everythingOff(); // Turn everything off
-      delay(200); // wait for serial to complete printing
-      LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
-    }
-  }
-
-  void RTCReportTime()
-  {
-    // Report time and next alarm back
-    Serial.println(F("RTC time is"));
-    DateTime now = RTC.now();
-    Serial.print(now.hour(), DEC); Serial.print(':'); Serial.print(now.minute(), DEC); Serial.print(':'); Serial.print(now.second(), DEC); Serial.println();
-  }
-
-  // Restore OPEnS Lab Factory Defaults
-  void writeEEPROMdefaults()
-  {
-    // Disable external pin interrupt on wake up pin.
-    detachInterrupt(digitalPinToInterrupt(wakeUpPin));
-
-    // EEPROM never written or factory default reset serial received "RST"
-    Serial.print(F("Writing EEPROM defaults. . ."));
-
-    configuration.SAMin = SampleAlarmMinDef;
-    configuration.SAHr = SampleAlarmHrDef;
-    configuration.SAPer = SampleAlarmPerDef;
-    configuration.FDMs = FlushDurMsDef;
-    configuration.SDMs = SampleDurMsDef;
-    configuration.SVml = SampleVolMlDef;
-    configuration.VNum = SampleValveNumDef;
-    configuration.written = 0;
-    configuration.Is_Daily = 1; // set daily flag in configuration
-    configuration.BFDMs = BagFlushDurMsDef;
-    configuration.numR = numRinseDef;
-    //  configuration.Is_Hourly = 0; // clear hourly flag in configuration
-
-    // Save Defaults into EEPROM
-    EEPROM_writeAnything(0, configuration);
-
-    // set RTC timer here:
-    RTC.setAlarm(ALM1_MATCH_HOURS, configuration.SAMin, configuration.SAHr, 0);
-    Serial.println(F("Done"));
-    // Allow wake up pin to trigger interrupt on low.
+    Serial.println(F("Sampler timed functions enabled"));
+    // RTC.setAlarm(ALM1_MATCH_HOURS, configuration.SAMin, configuration.SAHr, 0);
+    // Serial.print(F("Resetting Alarm 1 for: ")); Serial.print(configuration.SAHr); Serial.print(F(":"));Serial.println(configuration.SAMin);
+    // clearAlarms();
+    // Allow wake up pin from RTC to trigger pin 3 interrupt on low.
     attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
+    sleepEN = true; // set sleep flag to enable sleep at end of loop
   }
+  else
+  {
+    // Disable external pin interrupt from RTC on wake up pin.
+    detachInterrupt(digitalPinToInterrupt(wakeUpPin));
+    Serial.println(F("Sampler timed functions disabled"));
+    Serial.println(F("Processor AWAKE and standing by for serial commands"));
+    //      everythingOff(); // Turn everything off
+    sleepEN = false; //disable sleep flag
+    SampleState = false; // disable sample flag
+    timerEN = false; // disable timed functions flag
+
+    // We'll just sit awake in loop listening to the serial port
+  }
+}
+
+// ================================================================
+// Other Functions
+// ================================================================
+void clearAlarms()
+{
+  //clear any pending alarms
+  RTC.armAlarm(1, false);
+  RTC.clearAlarm(1);
+  //  RTC.alarmInterrupt(1, false);
+  //  RTC.armAlarm(2, false);
+  //  RTC.clearAlarm(2);
+  //  RTC.alarmInterrupt(2, false);
+}
+
+void sleepcheck()
+{
+  if (sleepEN)
+  {
+    Serial.println(F("Going to sleep"));
+    everythingOff(); // Turn everything off
+    delay(200); // wait for serial to complete printing
+    LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
+  }
+}
+
+void RTCReportTime()
+{
+  // Report time and next alarm back
+  Serial.println(F("RTC time is"));
+  DateTime now = RTC.now();
+  Serial.print(now.hour(), DEC); Serial.print(':'); Serial.print(now.minute(), DEC); Serial.print(':'); Serial.print(now.second(), DEC); Serial.println();
+}
+
+// Restore OPEnS Lab Factory Defaults
+void writeEEPROMdefaults()
+{
+  // Disable external pin interrupt on wake up pin.
+  detachInterrupt(digitalPinToInterrupt(wakeUpPin));
+
+  // EEPROM never written or factory default reset serial received "RST"
+  Serial.print(F("Writing EEPROM defaults. . ."));
+
+  configuration.SAMin = SampleAlarmMinDef;
+  configuration.SAHr = SampleAlarmHrDef;
+  configuration.SAPer = SampleAlarmPerDef;
+  configuration.FDMs = FlushDurMsDef;
+  configuration.SDMs = SampleDurMsDef;
+  configuration.SVml = SampleVolMlDef;
+  configuration.VNum = SampleValveNumDef;
+  configuration.written = 0;
+  configuration.Is_Daily = 1; // set daily flag in configuration
+  //  configuration.Is_Hourly = 0; // clear hourly flag in configuration
+
+  // Save Defaults into EEPROM
+  EEPROM_writeAnything(0, configuration);
+
+  // set RTC timer here:
+  RTC.setAlarm(ALM1_MATCH_HOURS, configuration.SAMin, configuration.SAHr, 0);
+  Serial.println(F("Done"));
+  // Allow wake up pin to trigger interrupt on low.
+  attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
+}
 
 
 

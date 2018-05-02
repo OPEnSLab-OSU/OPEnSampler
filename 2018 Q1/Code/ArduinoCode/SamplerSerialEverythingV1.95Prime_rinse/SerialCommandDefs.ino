@@ -20,7 +20,6 @@
   ** removed for this version : SV (int)X, sets "Sample Volume" in ml, a transform of Sample Duration, may not be 100% accurate, 2min per 250ml,
   VN (int)X, Sets the next valve/bag to place sample. Sampler saves curent valve number during operation in EEPROM in case of power failure, it picks up where it left off
              This ensures you can reset the valve count before each new deployment, or manually skip to next available bag should the sampler malfunction
-  PRM, Runs through sequence of water (3 rinses) and air (put in, take most out) flushes prior to deployment
   RST, Full system "factory" reset - set default sample period, sample duration, reset valve counter, writes defaults to EEPROM (overwriting previous settings)
   Pupet-String Commands:
   WARNING, receiving any of these will disable Arduino P3 Interrupt, RTC wakeup alarm pin. Typing RES or enabling the P2 TimerEn switch will also re-enable the P3 interrupt
@@ -45,7 +44,7 @@ void listenForSerial()
     //***detachInterrupt(digitalPinToInterrupt(wakeUpPin));
     // Detach alarm interrupt
     RTC.alarmInterrupt(1, false);
-    //MsTimer2::stop(); // dissable timer interrupt!
+    //MsTimer2::stop(); // disable timer interrupt!
     char anal = Serial.read();
     Serial.println(anal);
     switch (anal)
@@ -82,7 +81,7 @@ void listenForSerial()
         anal = Serial.read();
         if ((anal == 0) || (anal == 1))
         {
-          configuration.Is_Deployed = anal;
+          //configuration.Is_Deployed = anal;
         }
         else
         {
@@ -171,7 +170,7 @@ void listenForSerial()
         } // end 'N' detect
         if (isDigit(anal))  // else is this a digit? e.g. V#
         { // Change Sample Duration
-          //      timerEN = false; // First, disable timed functions, puppet mode
+          //      timerEN = false; // First, dissable timed functions, puppet mode
           // Disable external pin interrupt from RTC on wake up pin.
           //***detachInterrupt(digitalPinToInterrupt(wakeUpPin));
           Serial.println(F("Entering Puppet Mode"));
@@ -272,16 +271,6 @@ void listenForSerial()
             Serial.println(F("Invalad Motor Direction Message Received"));
             break;
         }
-      case 'P': //P detection
-        // go through priming routine: 3 rinses, purge out water, put in air, pull out most air
-        configuration.Is_Deployed = 0;
-
-        //do sequence here
-
-        configuration.Is_Deployed = 1;
-
-        break;
-
 
       default:
         Serial.println(F("Invalad Command Message Received"));
