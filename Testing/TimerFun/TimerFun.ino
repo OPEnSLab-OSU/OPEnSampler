@@ -6,7 +6,6 @@
 
 #include "Definitions.h"
 #include "SamplerFunctions.h"
-#include <SPI.h>        // Using SPI hardware to communicate with TPICs
 #include <AsyncDelay.h>
 
 // Make Instance of Timer

@@ -22,11 +22,13 @@ void listenForSerial()
           if (anal == 'N')
           {
             anal = Serial.parseInt(); // Read in integer
+            delay(10);
             if ((anal < numValves) && (anal >= 0))
             {
               // if valve number is valid, set valve number
               valveNum = anal;
               Serial.print(F("Valve number set to: ")); Serial.println(valveNum);
+              delay(10);
             }
             else
             {
@@ -47,11 +49,9 @@ void listenForSerial()
           sequenceFlag = true;  // enable timer
           timerEN = true; // enable master sample
           programCounter = 0;
-            myProgram[0] = 3; myTimes[0] = 1; //open bag valve
-            myProgram[1] = 5; myTimes[1] = 200; //pump water out
-            myProgram[2] = 0; myTimes[2] = 1; //turn everything off
-          //myProgram[] = {5, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0};
-          //myTimes[] = {5000, 250, 600, 600, 250, 3000, 250, 600, 600, 250, 4000};
+          myProgram[0] = 3; myTimes[0] = 1; //open bag valve
+          myProgram[1] = 5; myTimes[1] = 200; //pump water out
+          myProgram[2] = 0; myTimes[2] = 1; //turn everything off
         }
         break;
 
@@ -59,6 +59,7 @@ void listenForSerial()
         {
           Serial.println("Starting wash cycle");
           theNum = Serial.parseInt(); //read in integer
+          delay(10);
           if ((theNum < numValves) && (theNum >= 0))
           {
             // if valve number is valid, set valve number
@@ -100,11 +101,11 @@ void listenForSerial()
         break;
 
       case 'O': //off
-      {
-        sequenceFlag = false;  // disable timer
-        timerEN = false; // disable master sample
-        everythingOff;
-      }
+        {
+          sequenceFlag = false;  // disable timer
+          timerEN = false; // disable master sample
+          everythingOff;
+        }
         break;
 
       default:

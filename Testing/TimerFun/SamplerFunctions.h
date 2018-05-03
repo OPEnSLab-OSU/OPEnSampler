@@ -1,74 +1,5 @@
-//----------------------------
-// Sampler functions
-//----------------------------
-// Place to store sampler stage functions
-
-class SamplerFunctions {
-
-  public:
-
-   void doAction0_Off ()
-    {
-      Serial.println("Turning everything off");
-      setPump(0);
-      clearValveBits();  // Clear Valve Control bits, don't override Flush bit
-      flushOFF(); // Turns flush off and also strobes TPICs over SPI
-    }
-
-    void doAction1_OpenFlush ()
-    {
-      // open flush valve
-      clearValveBits();  // Clear Valve Control bits, don't override Flush bit
-      Serial.println(F("Opening flush valve"));
-      flushON(); // Turn Flush Valve on
-    }
-
-    void doAction2_NextValve ()
-    {
-      valveNum++;
-      Serial.print(F("Valve number advanced to: ")); Serial.println(valveNum);
-    }
-
-    void doAction3_OpenValve ()
-    {
-      Serial.print ("Opening valve number "); Serial.println(valveNum);
-      setValveBits();
-      flushOFF();
-    }
-
-    void doAction4_PumpOut ()
-    {
-      Serial.println ("Drawing out of sampler with pump");
-      setPump(-1);
-    }
-
-    void doAction5_PumpIn ()
-    {
-      Serial.println ("Drawing into sampler with pump");
-      setPump(1);
-    }
-
-// typedef for class function
-   typedef void (SamplerFunctions::*GeneralFunction) ();
-
-// Change the size of this array to match the number of actions defined above!
-   static const GeneralFunction doActionsArray [6];
-
-};  // end of class SamplerFunctions
-
- // array of function pointers
-const SamplerFunctions::GeneralFunction SamplerFunctions::doActionsArray [6] =
-  {
-    &SamplerFunctions::doAction0_Off, 
-    &SamplerFunctions::doAction1_OpenFlush, 
-    &SamplerFunctions::doAction2_NextValve, 
-    &SamplerFunctions::doAction3_OpenValve, 
-    &SamplerFunctions::doAction4_PumpOut, 
-    &SamplerFunctions::doAction5_PumpIn,
-  };
-
 // ================================================================
-// Valve Addressing Functions for serial TPICS
+// Valve and pump functions for serial TPICS
 // ================================================================
 
 // Turns off pump and valves
@@ -76,130 +7,181 @@ void everythingOff()
 {
   // Reset pump and all valves to off
   setPump(false); // turn off pump
-  Serial.println(F("Turning off valves"));
-  clearValveBits();  // Clear Valve Control bits, don't override Flush bit
-  flushOFF(); // Turns flush off and also strobes TPICs over SPI
+  closeValves(); // turn off all valves
 }
 
-// Turn flush valve of TPIC3 on, preserve state of other bits
-void flushON()
+// ================================================================
+// Valve Operations Functions for serial TPICS
+// ================================================================
+
+void closeValves()
 {
+  // Take rClock low to enable transfer
+  digitalWrite(rclock, LOW);
+  delay(1);
+  for (int i = 1; i < TPICcount; i--)
+  {
+    //transfer byte to TPIC i
+    SPI.transfer(0);
+  }
+  Serial.print(F("All valves closed"));
 
-  TPICBuffer[3] |= 0x01;   // TPICBuffer[3] is LSB
-  // Logical OR so as not to blow out other bits
-  Serial.println(F("Flushing System . . ."));
+  //indicate no valves are open
+  valveOpen = 0;
 
-  // Strobe TPIC buffer data to TPICS via SPI
-  strobeTPICs();
+  delay(1);
+  digitalWrite(rclock, HIGH);
 }
 
-// Turn flush valve of TPIC3 off, preserve state of other bits
-void flushOFF()
+void openValve()
 {
+  //use modulo to find valve place on TPIC
+  int valvePlace = currValve % 8;
 
-  TPICBuffer[3] &= 0xFE;   // TPICBuffer[3] is LSB
-  // Logical AND so as not to blow out other bits
+  // determine which TPIC the currValve is on
+  // assign currTPIC number to reflect physical setup
+  int currTPIC;
+  // round up
+  if (valvePlace > 0) {
+    currTPIC = currValve / 8 + 1;
+  }
+  // No rounding needed
+  else {
+    currTPIC = currValve / 8;
+  }
+  //int currTPIC = ceil(testValve/8);
+  Serial.print(F("Current TPIC in physical order")); Serial.println(currTPIC);
 
-  Serial.println(F("Flush Off . . ."));
+  /*generate and send output bytes - 1 per TPIC, go backwards since using cascading serial
+    - TPICs are connected in series - first 8 bits go to first TPIC
+      and it pushes rest of bits to next in line, etc. */
 
-  // Strobe TPIC buffer data to TPICS via SPI
-  strobeTPICs();
+  // Take rClock low to enable transfer
+  digitalWrite(rclock, LOW);
+  delay(1);
+  // loop through all TPICs
+  for (int i = 1; i < TPICcount; i--)
+  {
+    // if on the TPIC that has the valve, send valve place as power of 2
+    if (i == currTPIC)
+    {
+      //transfer byte to TPIC i
+      SPI.transfer(pow(2, (valvePlace - 1)));
+      // Print to serial
+      Serial.print(F("Valve ")); Serial.print(currValve); Serial.println(F(" on."));
+    }
+    // if not on TPIC that has valve, send 0
+    else
+    {
+      //transfer byte to TPIC i
+      SPI.transfer(0);
+    }
+  }
+  delay(1);
+  digitalWrite(rclock, HIGH);
+
+  //indicate a valve is open
+  valveOpen = 1;
 }
 
+// ================================================================
+// Pump Operation Function
+// ================================================================
 // Set Motor State, On(1), Off(0), Reverse(-1)
 void setPump(signed int ms)
 {
-
-  // SAFTEY FEATURE HERE, DONT TURN MOTOR ON IF ALL VALVES ARE CLOSED
+  // SAFTEY FEATURE HERE, DO NOT TURN MOTOR ON IF ALL VALVES ARE CLOSED
   // If all valves are closed, auto turn pump off to prevent destruction
   switch (ms)
   {
     case 1:  // Draw inwards
-      if ((TPICBuffer[0] != 0) || (TPICBuffer[1] != 0) || (TPICBuffer[2] != 0) || (TPICBuffer[3] != 0))
+      if (valveOpen)
       {
         Serial.println(F("Motor Turned on, Draw"));
         digitalWrite(pumpPin1, HIGH); // Set Pump pin high
-        digitalWrite(pumpPin2, LOW); // Set Pump pin high
+        digitalWrite(pumpPin2, LOW); // Set Pump pin low
       }
       else
-        Serial.println(F("Pump Draw can't enable; turn a valve on first"));
+        Serial.println(F("Pump draw can't enable; turn a valve on first"));
       break;
     case -1: // Draw outwards
-      if ((TPICBuffer[0] != 0) || (TPICBuffer[1] != 0) || (TPICBuffer[2] != 0) || (TPICBuffer[3] != 0))
+      if (valveOpen)
       {
         Serial.println(F("Motor Turned on, Reverse"));
-        digitalWrite(pumpPin1, LOW); // Set Pump pin high
+        digitalWrite(pumpPin1, LOW); // Set Pump pin low
         digitalWrite(pumpPin2, HIGH); // Set Pump pin high
       }
       else
-        Serial.println(F("Pump Reverse can't enable; turn a valve on first"));
+        Serial.println(F("Pump reverse can't enable; turn a valve on first"));
       break;
     case 0:
-      Serial.println(F("Motor turned off"));
+      Serial.println(F("Motor Turned off"));
       digitalWrite(pumpPin1, LOW); // Set Pump pin low
       digitalWrite(pumpPin2, LOW); // Set Pump pin low
       break;
     default:
       Serial.println(F("Invalid pump command received!"));
   }
-
 }
 
-// clear all bits but Flush bit, TPICBuffer[3] is LSB
-void clearValveBits()
-{
-  TPICBuffer[3] &= 0x01;
-  for (int i = 2; i >= 0; i--) // because 4 TPICs in module
-  {
-    TPICBuffer[i] = 0x00; //Clear upper registers
-  }
-  // Strobe TPIC buffer data to TPICS via SPI
-  strobeTPICs();
-}
+//----------------------------
+// Sampler functions
+//----------------------------
+// Place to store sampler stage functions
 
-// Takes current valve number and configures TPIC buffers, ready for transfer for SPI (different function)
-void setValveBits()
-{ // First, push (save) flush bit
-  bool flushBitSave;
-  flushBitSave = TPICBuffer[3];
-  TPICBuffer[3] &= 0x01;
-  // Clear valve buffer
-  for (int i = 2; i >= 0; i--) // because 4 TPICs in module
-  {
-    TPICBuffer[i] = 0x00; //Clear upper registers
-  }
-
-  // Set up TPIC buffers for next valve configuration
-  TPICBuffer[2] = 0x01; // Set least significant bit for shifting
-  // Shift up correct number of valves to configure TPIC buffers
-  for (int i = 1; i < numValves; i++)
-  {
-    shiftl(TPICBuffer, sizeof TPICBuffer);
-  }
-
-  // Now restore Flushbit
-  TPICBuffer[3] |= flushBitSave;
-
-  // Strobe TPIC buffer data to TPICS via SPI
-  strobeTPICs();
-}
-
-// Bit shifting function to set TPIC buffer bits that indicate correct valve on TPICs
-void shiftl(void *object, size_t size)
-{
-  unsigned char *byte; // pointer to Array address
-  for ( byte = object; size--; ++byte )
-  {
-    unsigned char bitz = 0;
-    if ( size )
+class SamplerFunctions {
+  public:
+    void doAction0_Off ()
     {
-      bitz = byte[1] & (1 << (8 - 1)) ? 1 : 0;
+      Serial.println("Turning everything off");
+      everythingOff();
     }
-    *byte <<= 1;
-    *byte  |= bitz;
-  }
-}
+    void doAction1_OpenFlush ()
+    {
+      Serial.println(F("Opening flush valve"));
+      currValve = flushValveNum; 
+      openValve();
+    }
+    void doAction2_NextValve ()
+    {
+      valveNum++;
+      Serial.print(F("Valve number advanced to: ")); Serial.println(valveNum);
+    }
+    void doAction3_OpenValve ()
+    {
+      Serial.print ("Opening valve number "); Serial.println(valveNum);
+      currValve = valveNum;
+      openValve();
+    }
+    void doAction4_PumpOut ()
+    {
+      Serial.println ("Drawing out of sampler with pump");
+      setPump(-1);
+    }
+    void doAction5_PumpIn ()
+    {
+      Serial.println ("Drawing into sampler with pump");
+      setPump(1);
+    }
+    
+    // typedef for class function
+    typedef void (SamplerFunctions::*GeneralFunction) ();
 
+    // Change the size of this array to match the number of actions defined above!
+    static const GeneralFunction doActionsArray [6];
+
+};  // end of class SamplerFunctions
+
+// array of function pointers
+const SamplerFunctions::GeneralFunction SamplerFunctions::doActionsArray [6] =
+{
+  &SamplerFunctions::doAction0_Off,
+  &SamplerFunctions::doAction1_OpenFlush,
+  &SamplerFunctions::doAction2_NextValve,
+  &SamplerFunctions::doAction3_OpenValve,
+  &SamplerFunctions::doAction4_PumpOut,
+  &SamplerFunctions::doAction5_PumpIn,
+};
 
 
 

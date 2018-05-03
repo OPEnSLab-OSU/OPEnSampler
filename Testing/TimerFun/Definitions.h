@@ -14,6 +14,8 @@
 // SamplerFunctions come from here:
 // https://arduino.stackexchange.com/questions/21095/how-to-write-array-of-functions-in-arduino-library
 
+#include <SPI.h>        // Using SPI hardware to communicate with TPICs
+
 // Switch Interrupt pin is LOW-True Logic, GND == enabled
 const byte interruptPin = 2;  // Digital pin switch is attached to that enables or disables the sampler timer
 const byte wakeUpPin = 3; // Use pin 3 as wake up pin
@@ -29,21 +31,23 @@ volatile int programCounter = 0; // counter to step through program array
 
 // This array determines the sequence of actions to take
 // during a sample condition, see action library in SamplerFunctions.h
-short myProgram[] = {0,0,0,0,0,0,0,0,0,0,0,0,0};
+short myProgram[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 // This array determines the timing of the above actions sequence numbers
 // during a sample condition, see action library in SamplerFunctions.h
-uint16_t myTimes[] = {0,0,0,0,0,0,0,0,0,0,0,0,0};
+uint16_t myTimes[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 //----------------------------
-// Valve Addressing Variables
+// Valve Operation Variables
 //----------------------------
 const int numValves = 24; // how many valves in each module
-int numModules = 1; // how many modules? 1 master module for now. Will be used to calculate number of shifts to TPICs for expansion modules
-unsigned char TPICBuffer[4] = {0x00}; // Store Status bits of TPICs, see ValveAddressing tab for details
-// uint16_t valveCount = 0;
-uint8_t moduleNum = 0;  // number of module depending on how high valve count is (groups of 25)
+const int TPICcount = ceil(numValves / 8) + 1;
+// flush valve is first valve on last TPIC
+const int flushValveNum = (TPICcount - 1) * 8 + 1;
+// variable to keep track of if any valves are open
+int valveOpen;
 uint8_t valveNum = 0;  // number of valve relative to current module
+uint8_t currValve = 0; //valve to perform operations on - would like to just use valveNum, but kept getting errors with openValve function
 int value = 0; // Place to accumulate valve number input (see SerialCommandDefs tab)
 
 //----------------------------
@@ -57,18 +61,12 @@ const byte datapin = 11; // SPI MOSI pin 11
 // Declare Valve Functions
 //----------------------------
 void everythingOff();
-void flushON();
-void flushOFF();
+void openValve();
+void closeValves();
 void setPump(signed int ms);
-void clearValveBits();
-void setValveBits();
-void shiftl(void *object, size_t size);
 
 //----------------------------
 // Other functions
 //----------------------------
 void listenForSerial();
-void strobeTPICs();
-
-
 
