@@ -5,7 +5,7 @@
 /**
  * Parses and executes valid commands
  *
- * Valid commands are in the format:
+ * Valid commands are in the following format:
  * - 1 identifying char corresponding to a command in execute()
  * - any amount of arguments separated by delimiter
  * - 1 terminator

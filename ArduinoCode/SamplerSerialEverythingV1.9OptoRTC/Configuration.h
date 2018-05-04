@@ -6,7 +6,7 @@ enum class Mode {DAILY, PERIODIC};
 
 // Values are stored in a struct within the Configuration class to make them easy to copy to/from EEPROM
 struct config_t {
-  Mode mode; // Mode of sample alarm
+  Mode mode; // Daily or Periodic sample timer
   bool written; // Has EEPROM been written to?
   uint8_t sampleAlarmHour;   // Hour   to take a sample
   uint8_t sampleAlarmMinute; // Minute to take a sample
