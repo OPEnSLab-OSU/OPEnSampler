@@ -29,17 +29,6 @@
         android:layout_marginTop="23dp"
         android:text="@string/device" />
 
-    <TextView
-        android:id="@+id/textTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Schedule Screen"
-        android:textSize="25dp"
-        android:textStyle="bold"
-        android:textColor="#ffffff"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
-
     <Button
         android:id="@+id/submitSched"
         android:layout_width="wrap_content"

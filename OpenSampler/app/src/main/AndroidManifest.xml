@@ -17,8 +17,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".samples.SampleActivity"></activity>
-        <activity android:name=".samples.SampleDetailActivity"></activity>
+        <activity android:name=".puppet.PuppetActivity"></activity>
+        <activity android:name=".puppet.PuppetDetailActivity"></activity>
         <activity android:name=".schedule.ScheduleActivity"></activity>
         <activity android:name=".connections.ConnectionActivity"></activity>
         <activity android:name=".connections.ConnectionDetailActivity"></activity>
