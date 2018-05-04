@@ -17,6 +17,7 @@
 #include <SPI.h>        // Using SPI hardware to communicate with TPICs
 
 // Switch Interrupt pin is LOW-True Logic, GND == enabled
+//make all constants all caps
 const byte interruptPin = 2;  // Digital pin switch is attached to that enables or disables the sampler timer
 const byte wakeUpPin = 3; // Use pin 3 as wake up pin
 const byte pumpPin1 = 8; // Motor MOSFET attached to digital pin 9,  1=forward, 0=reverse
@@ -28,6 +29,8 @@ volatile bool timerEN = false; // Flag to enable or disable sampler timed functi
 volatile long stateTimerMS = 0;  // Initialize state timer
 volatile bool sequenceFlag = false; // Is set True when timer has run its course
 volatile int programCounter = 0; // counter to step through program array
+volatile bool valvePrint = 0; //flag to control when valve number is printing in valveOpen
+volatile bool printedOnce = 1; //flag to control when valve number is printing in valveOpen
 
 // This array determines the sequence of actions to take
 // during a sample condition, see action library in SamplerFunctions.h

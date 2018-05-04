@@ -49,9 +49,13 @@ void listenForSerial()
           sequenceFlag = true;  // enable timer
           timerEN = true; // enable master sample
           programCounter = 0;
-          myProgram[0] = 3; myTimes[0] = 1; //open bag valve
-          myProgram[1] = 5; myTimes[1] = 200; //pump water out
+          myProgram[0] = 1; myTimes[0] = 1; //open flush valve
+          myProgram[1] = 5; myTimes[1] = 10000; //pump water in
           myProgram[2] = 0; myTimes[2] = 1; //turn everything off
+          myProgram[3] = 2; myTimes[3] = 1; //next valve
+          myProgram[4] = 3; myTimes[4] = 1; //open bag valve
+          myProgram[5] = 5; myTimes[5] = 10000; //pump water in
+          myProgram[6] = 0; myTimes[6] = 1; //turn everything off
         }
         break;
 

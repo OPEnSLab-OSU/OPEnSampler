@@ -65,11 +65,12 @@ void loop() {
     //Update the time to execute this next function:
     stateTimerMS = myTimes[programCounter];
 
-    Serial.print("Executing action number: ");
+    Serial.print("Executed action number: ");
     Serial.print(myProgram[programCounter]);
     Serial.print(" for ");
     Serial.print(stateTimerMS);
     Serial.println("ms");
+    delay(20);
 
     // Start a new timer based on
     delayTimer.start(stateTimerMS, AsyncDelay::MILLIS);
@@ -99,6 +100,12 @@ void loop() {
   }
   // listen for serial:
   listenForSerial();
+  //setup courtesy message to keep valve open
+  if (valveOpen && printedOnce)
+  {
+    valvePrint = 0; //flag to stop printing valve number after first time
+    openValve();
+    }
 } // end loop
 
 

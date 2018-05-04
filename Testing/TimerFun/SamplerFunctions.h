@@ -19,12 +19,12 @@ void closeValves()
   // Take rClock low to enable transfer
   digitalWrite(rclock, LOW);
   delay(1);
-  for (int i = 1; i < TPICcount; i--)
+  for (int i = TPICcount; i > TPICcount; i--)
   {
     //transfer byte to TPIC i
     SPI.transfer(0);
   }
-  Serial.print(F("All valves closed"));
+  Serial.println(F("All valves closed"));
 
   //indicate no valves are open
   valveOpen = 0;
@@ -50,8 +50,12 @@ void openValve()
     currTPIC = currValve / 8;
   }
   //int currTPIC = ceil(testValve/8);
-  Serial.print(F("Current TPIC in physical order")); Serial.println(currTPIC);
-
+  if (valvePrint)
+  {
+    Serial.print(F("Current TPIC in physical order ")); Serial.println(currTPIC);
+    Serial.print(F("Valve ")); Serial.print(currValve); Serial.println(F(" turning on."));
+    delay(20);
+  }
   /*generate and send output bytes - 1 per TPIC, go backwards since using cascading serial
     - TPICs are connected in series - first 8 bits go to first TPIC
       and it pushes rest of bits to next in line, etc. */
@@ -60,7 +64,7 @@ void openValve()
   digitalWrite(rclock, LOW);
   delay(1);
   // loop through all TPICs
-  for (int i = 1; i < TPICcount; i--)
+  for (int i = TPICcount; i > 0; i--)
   {
     // if on the TPIC that has the valve, send valve place as power of 2
     if (i == currTPIC)
@@ -68,13 +72,25 @@ void openValve()
       //transfer byte to TPIC i
       SPI.transfer(pow(2, (valvePlace - 1)));
       // Print to serial
-      Serial.print(F("Valve ")); Serial.print(currValve); Serial.println(F(" on."));
+      if (valvePrint)
+      {
+        Serial.print(F("Sent to TPIC: ")); Serial.println(pow(2, (valvePlace - 1)));
+        delay(20);
+      }
     }
     // if not on TPIC that has valve, send 0
     else
     {
       //transfer byte to TPIC i
       SPI.transfer(0);
+      if (valvePrint)
+        {
+          Serial.println(F("Sent to TPIC 0"));
+          delay(20);
+          printedOnce = 1;
+        }
+
+      
     }
   }
   delay(1);
@@ -139,8 +155,9 @@ class SamplerFunctions {
     void doAction1_OpenFlush ()
     {
       Serial.println(F("Opening flush valve"));
-      currValve = flushValveNum; 
+      currValve = flushValveNum;
       openValve();
+      valvePrint = 1;
     }
     void doAction2_NextValve ()
     {
@@ -152,6 +169,7 @@ class SamplerFunctions {
       Serial.print ("Opening valve number "); Serial.println(valveNum);
       currValve = valveNum;
       openValve();
+      valvePrint = 1;
     }
     void doAction4_PumpOut ()
     {
@@ -163,7 +181,7 @@ class SamplerFunctions {
       Serial.println ("Drawing into sampler with pump");
       setPump(1);
     }
-    
+
     // typedef for class function
     typedef void (SamplerFunctions::*GeneralFunction) ();
 
