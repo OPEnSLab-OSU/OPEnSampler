@@ -84,7 +84,7 @@ bool CommandParser::parseArguments(const char *buffer, uint8_t length) const
 
   // Count number of arguments (by counting delimiting characters)
   char *chr = buffer;
-  for (argc = 0; chr[argc]; chr[argc] == delimiter ? argc++ : *chr++);
+  for (argc = 0; chr[argc]; chr[argc] == delimiter[0] ? argc++ : *chr++);
   argc++; // There's one more argument than delimiters
 
   // Parse arguments
@@ -122,10 +122,12 @@ bool CommandParser::execute(char identifier, char *args[], size_t args_size) con
   char * str;
 
   // DEBUG
-  Serial.print(F("DEBUG: About to execute with identiffer: "));
+  Serial.print(F("DEBUG: About to execute with identifier: "));
   Serial.println(identifier);
   Serial.print(F("DEBUG: Hex is: "));
   Serial.println((char) identifier, HEX);
+  Serial.print(F("DEBUG: args_size is: "));
+  Serial.println(args_size);
   //------------------------------
 
   switch (identifier)
@@ -206,7 +208,7 @@ bool CommandParser::execute(char identifier, char *args[], size_t args_size) con
       config.setSampleDuration(int_args[0]);
       break;
 
- case 'U':
+    case 'U':
       if (args_size < 2 || !stringsToIntegers(int_args, args, args_size))
         return false;
 

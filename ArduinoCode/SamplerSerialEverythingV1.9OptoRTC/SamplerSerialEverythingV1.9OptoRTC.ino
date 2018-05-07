@@ -1,5 +1,5 @@
 /* OPEnS Water Sampler
-  Chet Udell, Mitch Nelke, Travis Whitehead
+  Chet Udell, Mitch Nelke
 
 SamplerSerialEverythingVx.x is the main Arduino Sketch file.
 

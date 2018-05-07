@@ -1,6 +1,6 @@
 /*
   Water Sampler Serial Command Set
-  Authors: Chet Udell, Travis Whitehead
+  Authors: Chet Udell
 
   This file contains the input parsing for the OPEnSampler's serial command set.
   These commands are used to update the OPEnSampler's configuration
