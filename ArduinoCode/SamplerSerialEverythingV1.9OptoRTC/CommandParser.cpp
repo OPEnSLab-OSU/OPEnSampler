@@ -41,18 +41,19 @@ CommandParser::CommandParser(char delimiter=',', char terminator='|')
  */
 bool CommandParser::process(char *buffer, uint8_t length) const
 {
-  char *command, *location;
+  const char *command;
+  char *location;
 
   command = strtok_r(buffer, this->terminator, &location);
 
   while (command != NULL) {
     size_t length = strlen(command);
 
-    // No arguments, so go straight to execution.
+    // Parse arguments and execute
     if (length > 1) {
-      CommandParser::parseArguments(command, length);
+      CommandParser::parseArguments(command, length); // TODO: remove space here?
     }
-    // Parse arguments and then execute
+    // No arguments, so go straight to execute
     else {
       if(!execute(command[0], NULL, 0)) {
         Serial.print(F("ERROR: Failed to execute command, not enough arguments: "));
@@ -83,12 +84,12 @@ bool CommandParser::parseArguments(const char *buffer, uint8_t length) const
   int argc;
 
   // Count number of arguments (by counting delimiting characters)
-  char *chr = buffer;
+  char *chr = (char *) buffer;
   for (argc = 0; chr[argc]; chr[argc] == delimiter[0] ? argc++ : *chr++);
   argc++; // There's one more argument than delimiters
 
   // Parse arguments
-  char *token = strtok(buffer + 1, delimiter);
+  char *token = strtok((char *) buffer + 1, delimiter); // TODO: Remove space earlier
 
   char *argv[argc];
   for (int count = 0; token != NULL; count++) {
@@ -97,7 +98,7 @@ bool CommandParser::parseArguments(const char *buffer, uint8_t length) const
   }
 
   // Execute command
-  if(!CommandParser::execute(buffer[0], argv, argc)) {
+  if(!CommandParser::execute(buffer[0], argv, argc)) { // TODO: What is buffer[0]
     Serial.println(F("ERROR: Invalid command received."));
     return false;
   }

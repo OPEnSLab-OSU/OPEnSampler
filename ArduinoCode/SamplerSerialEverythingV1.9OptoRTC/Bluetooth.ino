@@ -49,5 +49,5 @@ void RXCallback(uint8_t *buffer, uint8_t length)
   Serial.println(F(" ]"));
 
   Serial.println(F("DEBUG: Parsing command from Bluetooth."));
-  BLEParser.process(buffer, length);
+  BLEParser.process((char *) buffer, length);
 }

@@ -3,7 +3,7 @@ extern Configuration config;
 /**
  * Sends an SMS message to all stored phone numbers.
  */
-void sendSMSAll(const char * message)
+void sendSMSAll(char * message)
 {
   // Do nothing if SMS functionality isn't enabled
   if (! enableSMS) return;

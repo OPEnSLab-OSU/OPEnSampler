@@ -75,7 +75,7 @@ Configuration config;
 //----------------------------
 // Switch Interrupt pin is LOW-True Logic, GND == enabled
 const byte interruptPin = 2;  // Digital pin switch is attached to that enables or disables the sampler timer
-const byte wakeUpPin = A0; // Pin to recieve RTC's wake up interrupt. TODO
+const byte wakeUpPin = A0; // Pin to recieve RTC's wake up interrupt. // TODO
 const byte pumpPin1 = 8; // Motor MOSFET 1=forward, 0=reverse
 const byte pumpPin2 = 9; // Motor MOSFET 0=forward, 1=reverse
 const byte rClockPin = 10; // TPIC register clock pin, acts as SPI CS (chip select)
@@ -84,7 +84,7 @@ const byte rClockPin = 10; // TPIC register clock pin, acts as SPI CS (chip sele
 // Bluetooth Pins & Serial
 //----------------------------
 const byte bleReqPin = A1; // SPI CS (chip select) pin
-const byte bleRdyPin = 3;  // Interrupt pin for when data is ready
+const byte bleRdyPin = 3;  // Interrupt pin for when data is ready // TODO
 const byte bleRstPin = A2; // Used to reset board on startup
 
 //----------------------------
@@ -133,8 +133,8 @@ void setup() {
     delay(1000);
   Serial.println(F("Beginning setup."));
 
-  // TODO DEBUG
-  Serial.println(sizeof(fona) + sizeof(fonaSerial) + sizeof(fonaSS) + sizeof(BLESerial)); // TODO
+  // DEBUG
+  Serial.println(sizeof(fona) + sizeof(fonaSerial) + sizeof(fonaSS) + sizeof(BLESerial));
 
   pinMode(interruptPin, INPUT_PULLUP);
   pinMode(wakeUpPin, INPUT_PULLUP);
@@ -168,7 +168,6 @@ void setup() {
       Serial.println(F("ERROR: Couldn't find FONA, disabling SMS status updates. Restart to try again."));
       //enableSMS = false; TODO
     }
-    // TODO
   }
 
   // Enable and Config SPI hardware:
@@ -182,15 +181,14 @@ void setup() {
     while (1);
   }
 
-  Serial.print(F("Current Flush duration in ms is: "));
+  Serial.print(F("Flush duration (ms) is: "));
   Serial.println(config.getFlushDuration());
-  Serial.print(F("Current Sample duration in ms is: "));
+  Serial.print(F("Sample duration (ms) is: "));
   Serial.println(config.getSampleDuration());
 
   Serial.print(F("Next bag to sample is: "));
   Serial.println((config.getValveNumber() + 1)); // add 1 for the next to be sampled
 
-  // TODO LEFT OFF
   // This may end up causing a problem in practice - what if RTC loses power in field?
   // Shouldn't happen with coin cell batt backup
   if (RTC.lostPower()) {
@@ -205,7 +203,7 @@ void setup() {
 
   //Set SQW pin to OFF (in my case it was set by default to 1Hz)
   //The output of the DS3231 INT pin is connected to this pin
-  //It must be connected to arduino D2 pin for wake-up
+  //It must be connected to wakeUpPin
   RTC.writeSqwPinMode(DS3231_OFF);
   // Now set alarm based on mode flag (daily or periodic)
   if(config.getMode() == Mode::DAILY)

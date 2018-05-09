@@ -55,7 +55,7 @@ const int numValves = 24; // Amount of valves in each module (currently only sup
  * OPEnSampler Features
  * --------------------
  */
-// TODO: Decide how to handle value location
+// TODO: Decide where to put these
 // Maybe make enableSMS const and use another value for tracking it?
 const bool enableBluetooth = true;
 extern bool enableSMS; // Whether to send SMS status updates (set in SamplerSerialEverything)
