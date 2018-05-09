@@ -50,7 +50,7 @@ public:
   unsigned long getSampleDuration();
   uint8_t getSampleHour();
   uint8_t getSampleMinute();
-  char * getSMSNumber(int index);
+  const char * getSMSNumber(int index);
   uint16_t getPeriodicAlarmLength();
   uint8_t getValveNumber();
 

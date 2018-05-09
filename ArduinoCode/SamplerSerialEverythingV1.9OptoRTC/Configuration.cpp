@@ -253,7 +253,7 @@ uint8_t Configuration::getSampleMinute()
  * index is undefined. The number is stored without punctuation or whitespace
  * (e.g. 123456789012345).
  */
-char * Configuration::getSMSNumber(int index)
+const char * Configuration::getSMSNumber(int index)
 {
   if (index >= numSMSRecipients)
     return NULL;

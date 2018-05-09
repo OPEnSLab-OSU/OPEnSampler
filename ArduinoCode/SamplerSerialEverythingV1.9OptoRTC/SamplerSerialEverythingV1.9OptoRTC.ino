@@ -54,6 +54,8 @@ Firmware SAFETY Features:
 Pumps will not turn on if no valves are open at that time.
 Likewise, turning off all valves (including flush valve) will automatically shut off pumps
 */
+#define DEBUG 1 // TODO
+
 #include "Adafruit_BLE_UART.h" // Library for nRF8001 (BLE breakout)
 #include "Adafruit_FONA.h"     // Library for FONA 808 (GSM/SMS breakout)
 #include <SoftwareSerial.h>    // Used with FONA 808

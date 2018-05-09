@@ -131,7 +131,7 @@ void listenForSerial()
        */
       if (chr == 'R') {
         index = Serial.parseInt();
-        char * str = config.getSMSNumber(index);
+        const char * str = config.getSMSNumber(index);
 
         if (str)
           Serial.println(str);
