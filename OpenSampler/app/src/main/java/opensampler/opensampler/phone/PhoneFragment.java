@@ -1,7 +1,11 @@
 package opensampler.opensampler.phone;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +15,15 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.util.Date;
+
+import opensampler.opensampler.BluetoothService;
+import opensampler.opensampler.MainActivity;
 import opensampler.opensampler.R;
+
+import static opensampler.opensampler.DeviceListActivity.TAG;
 
 /**
  * Created by Godtop on 2/21/2018.
@@ -39,6 +51,8 @@ public class PhoneFragment extends Fragment {
     private TextView phoneNumberMsg;
     private TextView newNumber;
     private TextView addPhoneNumber;
+
+    private BluetoothService mService = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState){
@@ -74,6 +88,10 @@ public class PhoneFragment extends Fragment {
             phoneNumberMsg = (TextView) view.findViewById(R.id.phoneNumberMsg);
             newNumber = (TextView) view.findViewById(R.id.numberToChange);
             addPhoneNumber = (TextView) view.findViewById(R.id.addMessage);
+
+        submitPhoneAdd.setEnabled(false);
+        submitPhoneDelete.setEnabled(false);
+        submitPhoneUpdate.setEnabled(false);
 
         phoneNumbers.setVisibility(view.INVISIBLE);
         addPhoneNumber.setVisibility(view.INVISIBLE);
@@ -136,10 +154,87 @@ public class PhoneFragment extends Fragment {
             }
         });
 
+        submitPhoneAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v){
+                MainActivity xxx = (MainActivity)getActivity();
+                mService = xxx.mainService;
+                String pnumber = phoneAdd.getText().toString();
+                String message = "W" + pnumber;
+                byte[] value;
+                try{
+                    //send message
+                    value = message.getBytes("UTF-8");
+                    mService.writeRXCharacteristic(value);
+                }catch (UnsupportedEncodingException e){
+                    e.printStackTrace();
+                }
+            }
+        });
 
+        submitPhoneDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v){
+
+            }
+        });
+
+        submitPhoneUpdate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v){
+                MainActivity xxx = (MainActivity)getActivity();
+                mService = xxx.mainService;
+                 String pnumber = phoneUpdate.getText().toString();
+                 String message = "U" + pnumber;
+                byte[] value;
+                try{
+                    //send message
+                    value = message.getBytes("UTF-8");
+                    mService.writeRXCharacteristic(value);
+                }catch (UnsupportedEncodingException e){
+                    e.printStackTrace();
+                }
+            }
+        });
 
         return view;
     }
 
+    private final BroadcastReceiver UARTStatusChangeReceiver = new BroadcastReceiver() {
 
+        public void onReceive(Context context, Intent intent) {
+            //all broadcasts are given an intent, intent.getaction is the action specified by the broadcast
+            //the action is used to determine what needs to change in the ui such as changing the connect button to disconnect
+            //currently not receiving broadcasts for some reason
+            String action = intent.getAction();
+
+            final Intent mIntent = intent;
+            //*********************//
+            if (action.equals(BluetoothService.ACTION_GATT_CONNECTED)) {
+                getActivity().runOnUiThread(new Runnable() {
+                    public void run() {
+                        //enable add phone button
+                        submitPhoneAdd.setEnabled(true);
+                        submitPhoneDelete.setEnabled(true);
+                        submitPhoneUpdate.setEnabled(true);
+                        MainActivity xxx = (MainActivity)getActivity();
+                        mService = xxx.mainService;
+                    }
+                });
+            }
+
+            //*********************//
+            if (action.equals(BluetoothService.ACTION_GATT_DISCONNECTED)) {
+                getActivity().runOnUiThread(new Runnable() {
+                    public void run() {
+                        submitPhoneAdd.setEnabled(false);
+                        submitPhoneDelete.setEnabled(false);
+                        submitPhoneUpdate.setEnabled(false);
+                        MainActivity xxx = (MainActivity)getActivity();
+                        mService = xxx.mainService;
+                    }
+                });
+            }
+        }
+    };
 }

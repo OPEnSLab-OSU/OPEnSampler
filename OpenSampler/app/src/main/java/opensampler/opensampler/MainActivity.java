@@ -12,11 +12,12 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
+import android.widget.ImageButton;
+import android.widget.TextView;
 
 import opensampler.opensampler.connections.ConnectionFragment;
 import opensampler.opensampler.phone.PhoneFragment;
-import opensampler.opensampler.samples.SamplesFragment;
+import opensampler.opensampler.puppet.PuppetFragment;
 import opensampler.opensampler.schedule.ScheduleFragment;
 
 public class MainActivity extends AppCompatActivity {
@@ -27,8 +28,10 @@ public class MainActivity extends AppCompatActivity {
     private Button mSampButt;
     private Button mSchedButt;
     private Button mPhoneButt;
+    private ImageButton mInfoButt;
+    private TextView mScreenName;
+	public BluetoothService mainService = null;
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,28 +46,64 @@ public class MainActivity extends AppCompatActivity {
         mSampButt = (Button) findViewById(R.id.samp);
         mSchedButt = (Button) findViewById(R.id.sched);
         mPhoneButt = (Button) findViewById(R.id.phone);
+        mInfoButt = (ImageButton) findViewById(R.id.btnUserInfo);
 
+        mScreenName = (TextView) findViewById(R.id.screenName);
+
+        mScreenName.setText("Connections");
         mConnButt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view){
+                mScreenName.setText("Connections");
                 setViewPager(0);            }
         });
         mSampButt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view){
+                mScreenName.setText("Puppet Commands");
                 setViewPager(1);
             }
         });
         mSchedButt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view){
+                mScreenName.setText("Scheduler");
                 setViewPager(2);
             }
         });
         mPhoneButt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view){
+                mScreenName.setText("Phone Commands");
                 setViewPager(3);
+            }
+        });
+
+        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                if(position == 0){
+                    mScreenName.setText("Connections");
+                }
+                if(position == 1){
+                    mScreenName.setText("Puppet Commands");
+                }
+                if(position == 2){
+                    mScreenName.setText("Scheduler");
+                }
+                if(position == 3){
+                    mScreenName.setText("Phone Commands");
+                }
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
             }
         });
 
@@ -113,10 +152,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     private void setupViewPager(ViewPager viewPager){
         SectionStatePagerAdapter adapter = new SectionStatePagerAdapter(getSupportFragmentManager());
         adapter.addFragment(new ConnectionFragment(), "ConnectionFragment");
-        adapter.addFragment(new SamplesFragment(), "SamplesFragment");
+        adapter.addFragment(new PuppetFragment(), "PuppetFragment");
         adapter.addFragment(new ScheduleFragment(), "ScheduleFragment");
         adapter.addFragment(new PhoneFragment(), "PhoneFragment");
         viewPager.setAdapter(adapter);

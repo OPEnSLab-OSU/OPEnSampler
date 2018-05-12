@@ -5,17 +5,6 @@
     android:layout_height="match_parent"
     android:background="@color/colorPrimary">
 
-    <TextView
-        android:id="@+id/textTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Connections Screen"
-        android:textSize="25dp"
-        android:textColor="#ffffff"
-        android:textStyle="bold"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
-
     <Button
         android:id="@+id/timeSelectorActivity"
         android:layout_width="wrap_content"
