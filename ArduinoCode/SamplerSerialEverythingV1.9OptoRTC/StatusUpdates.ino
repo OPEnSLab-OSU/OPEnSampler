@@ -1,37 +1,53 @@
-/**
- * Set the phone number of a status update recipient.
- *
- * Sets a null-terminated string containing a phone number at the specified
- * index to be stored persistently in configuration. Phone numbers can be up to
- * 15 digits in length. It's assumed that buffer can store at least 16 chars.
- * The number should be stored without punctuation or whitespace
- * (e.g. 123456789012345).
- */
-void setPhone(int index, char *buffer)
-{
-  if (index >= NUM_PHONES)
-    return;
+#if FONA_ENABLED
 
-  strncpy(configuration.phones[index], buffer, 15);
-  configuration.phones[index][15] = '\0';
+#include "Globals.h"
 
-  return;
-}
+// https://github.com/adafruit/Adafruit_FONA/blob/master/examples/FONAtest/FONAtest.ino#L269
+enum NetworkStatus { NOT_REGISTERED           = 0,
+                     REGISTERED_HOME          = 1,
+                     NOT_REGISTERED_SEARCHING = 2,
+                     DENIED                   = 3,
+                     NOT_KNOWN                = 4,
+                     REGISTERED_ROAMING       = 5 };
 
 /**
- * Get the phone number of a status update recipient.
- *
- * Returns a pointer to an ASCII phone number, or null if the phone number at
- * index is undefined. The number is stored without punctuation or whitespace
- * (e.g. 123456789012345).
+ * Send an SMS message to all stored phone numbers.
  */
-char * getPhone(int index)
+void sendSMSAll(char * message)
 {
-  if (index >= NUM_PHONES)
-    return NULL;
+  // Send SMS to each recipient
+  for (unsigned int i = 0; i < numSMSRecipients; i++) {
+    NetworkStatus status = (NetworkStatus) fona.getNetworkStatus();
+    
+    // Delay briefly while waiting for good network status
+    const unsigned int seconds = 10;
+    for (unsigned int count = 0; count <= seconds; count++) {
 
-  if (strlen(configuration.phones[index]) == 0)
-    return NULL;
+      if (status == REGISTERED_HOME || status == REGISTERED_ROAMING) break;
 
-  return configuration.phones[index];
+#ifdef DEBUG
+      Serial.println(F("DEBUG: Network not ready to send SMS, delaying 1s"));
+#endif
+
+      delay(1000);
+      status = (NetworkStatus) fona.getNetworkStatus();
+    }
+
+    // Done waiting, send it now
+    char * phoneNumber = config.getSMSNumber(i);
+
+    if (phoneNumber) {
+#ifdef DEBUG
+        Serial.print(F("DEBUG: Attempting to send SMS to "));
+        Serial.print(phoneNumber);
+#endif
+
+      if (!fona.sendSMS(phoneNumber, message)) {
+        Serial.print(F("ERROR: FONA library reported problems sending SMS to "));
+        Serial.println(phoneNumber);
+        Serial.println(F("(It may go through anyways.)"));
+      }
+    }
+  }
 }
+#endif

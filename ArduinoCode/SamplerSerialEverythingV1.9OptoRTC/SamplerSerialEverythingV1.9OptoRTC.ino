@@ -1,6 +1,5 @@
-/*
-  OPEnS Water Sampler
-  Chet Udell, Mitch Nelke, Travis Whitehead
+/* OPEnS Water Sampler
+  Chet Udell, Mitch Nelke
 
 SamplerSerialEverythingVx.x is the main Arduino Sketch file.
 
@@ -26,21 +25,22 @@ The features of OPEnS Sampler 1.0 include:
 24 sampler bags, 1 flush valve, 2 peristaltic pumps.
 It takes about 2 min to draw 250ml, or 480ms per ml
 1 Power Switch, 1 Sampler enable switch (because we want independent control of the timed sampler functions without cutting power, features that use this will be explained).
-Serial Command Set, You can communicate with the sampler over USB serial at 9600 Baud.
+Serial Command Set, You can communicate with the sampler over USB serial at baud rate specified in Defaults.h
 
 Arduino Pinouts:
-GPIO2   - Sample enable/disable low-true
-GPIO3   - RTC Interrupt, low-true
-GPIO8   - pump pin 1 (motor driver 1) *was GPIO09
-GPIO9  - pump pin 2 (motor driver 2)  *was GPIO10
+GPIO2  - Sample enable/disable low-true
+GPIO3  - RTC Interrupt, low-true
+GPIO8  - pump pin 1 (motor driver 1)
+GPIO9  - pump pin 2 (motor driver 2)
 ~ SPI ~
-GPIO10 - rClock - TPIC register clock  *was GPIO08
+GPIO10 - rClockPin - TPIC register clock
 GPIO11 - SPI MOSI - TPIC Data
-GPIO13 - sClk - TPIC serial clock
+GPIO12 - SPI MISO
+GPIO13 - SPI SCLK - TPIC serial clock
 ~ i2c ~
 SCL/SDA = to RTC SCL/SDA
 
-Sampler Use:
+Sampler Use:r
 Power cycle on best practice: Be sure to supply the 12VDC source before plugging Arduino into USB
 Power cycle off: unplug Arduino USB before unplugging 12VDC supply
 
@@ -53,126 +53,141 @@ Power cycle off: unplug Arduino USB before unplugging 12VDC supply
 Firmware SAFETY Features:
 Pumps will not turn on if no valves are open at that time.
 Likewise, turning off all valves (including flush valve) will automatically shut off pumps
-
 */
 
-#include <Wire.h> // i2c connection for RTC DS3231
-#include <RTClibExtended.h> // Library to configure DS3231
-#include "LowPower.h" // Use Low-Power library from Sparkfun and RTC pin interrupt (P3) to manage sleep and scheduling at same time
-#include <EEPROM.h>     // Will be writing params to non-volatile memory to save between uses
-#include "EEPROMAnything.h" // EEPROM read/write functions
-#include <SPI.h>        // Using SPI hardware to communicate with TPICs
+#include <Wire.h>              // i2c connection for RTC DS3231
+#include <RTClibExtended.h>    // Library to configure DS3231
+#include "LowPower.h"          // Use Low-Power library from Sparkfun and RTC pin interrupt (P3) to manage sleep and scheduling at same time
+#include <EEPROM.h>            // Will be writing params to non-volatile memory to save between uses
+#include <SPI.h>               // Using SPI hardware to communicate with TPICs
 
-#define NUM_PHONES 30 // Max number of phone numbers to store in configuration
+#include "CommandParser.h"
+#include "Configuration.h"
+#include "Defaults.h"
+#include "Globals.h"
+#include "ValveAddressing.h"
 
-const byte eepromValidationValue = 99; // Value to test to see if EEPROM has been written before
-// Determine Sampler "Factory Default" behaviour. These can be changed and saved using the SerialCommandDefs (see tab with same label)
-// If never set before, default sample time is once per day, at 8AM (08:00)
-const uint8_t SampleAlarmMinDef = 00; // Default sample time: Min
-const uint8_t SampleAlarmHrDef = 8; // Default sample time: Hr
-const uint16_t SampleAlarmPerDef = 3; // Default sample period time, 3 min for testing, make longer for factory release
+Configuration config;
 
-const uint16_t SampleDurMsDef = 30000; // Factory Default 30 sec, takes 60 seconds for 250ml so - don't overfill, How long pumps should run to take one sample, in ms
-const uint16_t FlushDurMsDef = 30000; // Factory default, low long in ms to flush system
-
-const uint8_t SampleVolMlDef = 250;  // Factory Default, sample vol in ml, 250ml takes about 2min, or about 480ms per ml
-const bool SampleValveNumDef = 0; // Factory Default, current valve number
-
+//----------------------------
+// Pins
+//----------------------------
 // Switch Interrupt pin is LOW-True Logic, GND == enabled
 const byte interruptPin = 2;  // Digital pin switch is attached to that enables or disables the sampler timer
-const byte wakeUpPin = 3; // Use pin 3 as wake up pin
-const byte pumpPin1 = 8; // Motor MOSFET attached to digital pin 9,  1=forward, 0=reverse
-const byte pumpPin2 = 9; // Motor MOSFET attached to digital pin 10 0=forward, 1=reverse
-signed int directionMotor = 0; // 0=off, 1=draw water in, -1=pull water out
 
-volatile bool ledState = 0;
+// TODO: Not currently a proper interrupt pin, as PinChangeInterrupt conflicts with SoftwareSerial...
+const byte wakeUpPin = A0; // Pin to recieve RTC's wake up interrupt.
+
+const byte pumpPin1 = 8; // Motor MOSFET 1=forward, 0=reverse
+const byte pumpPin2 = 9; // Motor MOSFET 0=forward, 1=reverse
+const byte rClockPin = 10; // TPIC register clock pin, acts as SPI CS (chip select)
+
+//----------------------------
+// Bluetooth Pins & Serial
+//----------------------------
+const byte bleReqPin = A1; // SPI CS (chip select) pin
+const byte bleRdyPin = 3;  // Interrupt pin for when data is ready // TODO: See wakeUpPin, swap as needed
+const byte bleRstPin = A2; // Used to reset board on startup
+
+//----------------------------
+// GSM/SMS Breakout Pins
+//----------------------------
+const byte fonaRXPin  = 5;
+const byte fonaTXPin  = 6;
+const byte fonaRstPin = 4;
+//----------------------------
+
 volatile bool timerEN = false; // Flag to enable or disable sampler timed functions
 volatile bool sleepEN = false; // Flag to check in loop to see if we should sleep or not
 // These maintain the current state
 volatile bool SampleState = LOW; // SampleState used to set valve and motor states for taking new sample
 volatile bool FlushState = LOW;  // used to set state-machine flush flag
 
-volatile unsigned long previousMillis = 0;   // will store last time Sample was taken
+volatile unsigned long previousMillis = 0; // will store last time Sample was taken
 
-int value = 0; // Place to accumulate valve number input (see SerialCommandDefs tab)
-
-// Struct for saving Sampler params in EEPROM, see http://playground.arduino.cc/Code/EEPROMWriteAnything
-struct config_t
-{
-  uint8_t SAMin; // Sample alarm time Min
-  uint8_t SAHr; // Sample alarm time Hr
-  uint16_t SAPer; // Sample period Time
-  unsigned long FDMs; // Flush duration in ms
-  unsigned long SDMs;  // Sample Duration in ms
-  uint16_t SVml; // Sample volume in ml
-  uint8_t VNum;  // Current Valve number sampled, 0=reset/default
-  byte written;  // Has the EEPROM Memory been written before?
-  bool Is_Daily; // Specifies daily (true) or periodic (false) alarm mode.
-  char phones[NUM_PHONES][16]; // Phone numbers for SMS status update recipients
-} configuration;
-
-//----------------------------
+//---------------------------
 // Valve Addressing Variables
-//----------------------------
-#define NUM_VALVES 24 // Amount of valves in each module
-int numModules = 1; // how many modules? 1 master module for now. Will be used to calculate number of shifts to TPICs for expansion modules
-unsigned char TPICBuffer[4] = {0x00}; // Store Status bits of TPICs, see ValveAddressing tab for details
-// uint16_t valveCount = 0;
-uint8_t moduleNum = 0;  // number of module depending on how high valve count is (groups of 25)
-uint8_t valveNum = 0;  // number of valve relative to current module
+//---------------------------
+unsigned char TPICBuffer[4] = {0x00}; // Store status bits of TPICs, see ValveAddressing for details
 
-//----------------------------
-// SPI Variables
-//----------------------------
-const byte sclock = 13; // SPI SCK pin 13
-const byte rclock = 10; // Register clock pin, acts as CS, could be moved to SPI SS pin 10?
-const byte datapin = 11; // SPI MOSI pin 11
+//----------------------------------
+// Bluetooth Serial & Command Parser
+//----------------------------------
+CommandParser BLEParser(',', '|');
+Adafruit_BLE_UART BLESerial = Adafruit_BLE_UART(bleReqPin, bleRdyPin, bleRstPin);
 
-// Init DS3231 RTC
+//--------------------------------
+// FONA 808 for SMS Status Updates
+//--------------------------------
+#if FONA_ENABLED
+SoftwareSerial fonaSS = SoftwareSerial(fonaTXPin, fonaRXPin);
+SoftwareSerial *fonaSerial = &fonaSS;
+Adafruit_FONA fona = Adafruit_FONA(fonaRstPin);
+#endif
+//--------------------------------
+
 RTC_DS3231 RTC;
 
 void setup() {
+  Serial.begin(baud);
+  while (!Serial)
+    delay(1000);
+  Serial.println(F("Beginning setup."));
+
   pinMode(interruptPin, INPUT_PULLUP);
   pinMode(wakeUpPin, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(interruptPin), sampleEN, CHANGE);
-  // Read EEPROM memory struct configuration
-  EEPROM_readAnything(0, configuration);
-  // initialize digital pin LED_BUILTIN as an output.
+
+  // Read EEPROM into Configuration
+  config.readFromEEPROM();
+
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(pumpPin1, OUTPUT); // Set motor pin1 to output
   digitalWrite(pumpPin1, LOW); // Turn off Motor
   pinMode(pumpPin2, OUTPUT); // Set motor pin2 to output
   digitalWrite(pumpPin2, LOW); // Turn off Motor
 
-  Serial.begin(115200); // send and receive at 9600 baud
-  while (!Serial)
-    delay(1000);
-  if (configuration.written != eepromValidationValue)
-  {
-    writeEEPROMdefaults();
-  }
+  if (!config.getWritten())
+    writeEEPROMDefaults();
 
-  Serial.print(F("the current Flush duration in ms is: "));
-  Serial.println(configuration.FDMs);
-  Serial.print(F("the current Sample duration in ms is: "));
-  Serial.println(configuration.SDMs);
-  Serial.print(F("Next bag to sample is: "));
-  Serial.println((configuration.VNum+1)); // add 1 to this number for the actual bag number
+  BLESerial.setRXcallback(RXCallback);
+  BLESerial.setACIcallback(ACICallback);
+  BLESerial.setDeviceName((const char*) F("Sampler")); // Can be no longer than 7 characters
+  BLESerial.begin();
+  Serial.println(F("Bluetooth initialized."));
 
-// Enable and Config SPI hardware:
-  pinMode(rclock, OUTPUT);
+  // FONA 808 Setup (for SMS status updates)
+#if FONA_ENABLED
+    fonaSerial->begin(baud);
+    if (! fona.begin(*fonaSerial)) {
+      Serial.println(F("ERROR: Couldn't find FONA..."));
+    }
+#endif
+
+  // Enable and Config SPI hardware:
+  pinMode(rClockPin, OUTPUT);
   SPI.begin();
   SPISettings(16000000, MSBFIRST, SPI_MODE1);
-// RTC Timer settings here
+
+  // RTC Timer settings here
   if (! RTC.begin()) {
-    Serial.println(F("Couldn't find RTC"));
-    while (1);
+    Serial.println(F("Couldn't find RTC. Hanging..."));
+    while (true);
   }
 
-// This may end up causing a problem in practice - what if RTC looses power in field? Shouldn't happen with coin cell batt backup
+  Serial.print(F("Flush duration (ms) is: "));
+  Serial.println(config.getFlushDuration());
+  Serial.print(F("Sample duration (ms) is: "));
+  Serial.println(config.getSampleDuration());
+
+  Serial.print(F("Next bag to sample is: "));
+  Serial.println((config.getValveNumber() + 1)); // add 1 for the next to be sampled
+
+  // This may end up causing a problem in practice - what if RTC loses power in field?
+  // Shouldn't happen with coin cell batt backup
   if (RTC.lostPower()) {
-    Serial.println(F("RTC lost power, lets set the time!"));
-  // following line sets the RTC to the date & time this sketch was compiled
+    Serial.println(F("RTC lost power, setting time."));
+    // following line sets the RTC to the date & time this sketch was compiled
     RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
   }
 
@@ -182,25 +197,24 @@ void setup() {
 
   //Set SQW pin to OFF (in my case it was set by default to 1Hz)
   //The output of the DS3231 INT pin is connected to this pin
-  //It must be connected to arduino D2 pin for wake-up
+  //It must be connected to wakeUpPin
   RTC.writeSqwPinMode(DS3231_OFF);
-// Now set Alarm based on whether Mode flag Is_Daily (true) or Periodic (false)
-if(configuration.Is_Daily)
-{
-  //Set alarm1 every day at Hr:Mn
-  // You may use different Alarm types for different periods (e.g. ALM1_MATCH_MINUTES to go off every hr)
-  // RTC.setAlarm(ALM1_MATCH_MINUTES, configuration.SAMin, 0, 0); // This might work to go off every hour at specified minute every hour
-  RTC.setAlarm(ALM1_MATCH_HOURS, configuration.SAMin, configuration.SAHr, 0); // set your wake-up time here
-  Serial.print(F("the current sample Alarm set for Daily at"));
-  Serial.print(configuration.SAHr); Serial.print(F(":")); Serial.println(configuration.SAMin);
-}
-else  // is Periodic
-{
-  //Set alarm1 every hr at Mn
-  setAlarmPeriod(); // found at bottom of SerialCommandDefs tab
-}
+  // Now set alarm based on mode flag (daily or periodic)
+  if(config.getMode() == Mode::DAILY)
+  {
+    //Set alarm1 every day at Hr:Mn
+    // You may use different Alarm types for different periods (e.g. ALM1_MATCH_MINUTES to go off every hr)
+    // RTC.setAlarm(ALM1_MATCH_MINUTES, config.getSampleMinute(), 0, 0); // This might work to go off every hour at specified minute every hour
+    RTC.setAlarm(ALM1_MATCH_HOURS, config.getSampleMinute(), config.getSampleHour(), 0);
+    Serial.print(F("the current sample Alarm set for Daily at"));
+    Serial.print(config.getSampleHour()); Serial.print(F(":")); Serial.println(config.getSampleMinute());
+  }
+  else if (config.getMode() == Mode::PERIODIC)
+  {
+    config.refreshPeriodicAlarm();
+  }
   // Reset pump and all valves to off
-  Serial.print(F("resetting electronics . . ."));
+  Serial.print(F("resetting electronics ..."));
   everythingOff();
   delay(1000); // 1s
 
@@ -215,19 +229,23 @@ void loop()
 {
   if(timerEN)
   {
-    // Exiting Sleep mode...
-    Serial.println(F("Exit Sleep Mode . . ."));
-    Serial.print(F("Woke up at "));
-    DateTime now = RTC.now();
-    Serial.print(now.hour(), DEC); Serial.print(':'); Serial.print(now.minute(), DEC); Serial.print(':'); Serial.print(now.second(), DEC); Serial.println();
-    // Disable external pin interrupt on wake up pin.
-    detachInterrupt(digitalPinToInterrupt(wakeUpPin)); // Disable external pin interrupt for switch until finished sampling
+    Serial.println(F("Exiting Sleep Mode ..."));
+    Serial.print(F("Woke up."));
+    RTCReportTime();
 
-    if (configuration.VNum >= NUM_VALVES) // If target valve number is greater than total number of desired valves
+    // Disable RTC's wakeup interrupt pin
+    detachInterrupt(digitalPinToInterrupt(wakeUpPin));
+
+    // If target valve number is greater than total number of valves
+    if (config.getValveNumber() >= numValves)
     {
-      Serial.println(F("Total number of samples reached!"));
-      Serial.println(F("Sleeping forever, bye!"));
-      // warning, because wakeup pin is disabled above, sleep forever, no wakeup from here
+      Serial.println(F("Total number of samples reached! Sleeping forever..."));
+      // Because wakeup pin is disabled above, sleep forever, no wakeup from here
+
+#if FONA_ENABLED
+      sendSMSAll((const char *) F("OPEnSampler says: HELLO WORLD"));
+#endif
+
       sleepEN = true; // Set sleep flag to sleep at end of loop
     }
     else
@@ -235,22 +253,24 @@ void loop()
       // Disable external pin interrupt on wake up pin.
       detachInterrupt(digitalPinToInterrupt(interruptPin));
 
-      //clear the alarm
       clearAlarms();
       //set alarm for next cycle
-      if(configuration.Is_Daily)
+      if(config.getMode() == Mode::DAILY)
       {
-        RTC.setAlarm(ALM1_MATCH_HOURS, configuration.SAMin, configuration.SAHr, 0);   //set your wake-up time here
+        RTC.setAlarm(ALM1_MATCH_HOURS, config.getSampleMinute(), config.getSampleHour(), 0);
         Serial.print(F("Resetting Alarm for next day at "));
-        Serial.print(configuration.SAHr); Serial.print(F(":")); Serial.println(configuration.SAMin);
+        Serial.print(config.getSampleHour()); Serial.print(F(":")); Serial.println(config.getSampleMinute());
       }
-      else
+      else if (config.getMode() == Mode::PERIODIC)
       {
-        setAlarmPeriod();
+        config.refreshPeriodicAlarm();
       }
 
+      Serial.println(F("Taking a water sample."));
+#if FONA_ENABLED
+      sendSMSAll((const char *) F("OPEnSampler says: Taking a sample!"));
+#endif
 
-      Serial.println(F("time to take a sample"));
       previousMillis = millis();  // Remember the time at this point
       SampleState = HIGH; // Trigger new sample cycle, raise sample flag for Loop
       FlushState = HIGH; // Begin sample cycle by flushing system for period of time
@@ -260,7 +280,7 @@ void loop()
       flushON(); // Turn Flush Valve on, Turn on Motors
 
       //Turn Motors on to flush system
-      setPump(SampleState); // Turn on Pump
+      setPump(pumpState::ON);
       //digitalWrite(LED_BUILTIN, SampleState);
     }
     timerEN = false; // disable timed functions
@@ -268,21 +288,20 @@ void loop()
   else if (SampleState) // Will be TRUE if new sample alarm ISR has been triggered
   { // Enter Flush mode. . .
     // check to see if it's time to start or stop this newly triggered sample
-    unsigned long currentMillis = millis();
+    unsigned long elapsedMilliseconds = millis() - previousMillis;
     // Begin sample cycle by flushing for period of time, Flush already on by this point ( see sampleTrig() )
 
-    if ((FlushState == HIGH) && (currentMillis - previousMillis >= configuration.FDMs))
+    if ((FlushState == HIGH) && (elapsedMilliseconds >= config.getFlushDuration()))
     { // End Flush, enter Sample Mode
-      Serial.print(F("Flushed System for ")); Serial.print(configuration.FDMs); Serial.println(F("ms"));
+      Serial.print(F("Flushed System for ")); Serial.print(config.getFlushDuration()); Serial.println(F("ms"));
       FlushState = LOW; // Lower Flush flag, done flushing, Now Entering Sample Mode
-      setPump(0);       // Turn off pump
-      // flushOFF();    // Turn off flush valve here
+      setPump(pumpState::OFF);
 
-      configuration.VNum++;
-      configuration.written = eepromValidationValue; // ensure we remember we've written new value to EEPROM
-      EEPROM_writeAnything(0, configuration); // SAVE new Valve Number in EEPROM
+      config.setValveNumber(config.getValveNumber() + 1);
+      config.writeToEEPROM(); // Save new valve number to EEPROM
 
-      Serial.print(F("moving onto sampling Valve number ")); Serial.println(configuration.VNum);
+      Serial.print(F("Moving onto sampling valve number "));
+      Serial.println(config.getValveNumber());
 
       // Configure TPIC buffers according to current valve, strobe out to SPI
       setValveBits();    // need to do here, else Pump won't turn on (valve must be open for pump on)
@@ -293,16 +312,19 @@ void loop()
       Serial.print(F("TPICBuffer1: ")); Serial.println(TPICBuffer[1]);
       Serial.print(F("TPICBuffer0: ")); Serial.println(TPICBuffer[0]);
 
-      setPump(1);   // Turn on pump, draw sample in
+      setPump(pumpState::ON); // Turn on pump, draw sample in
     }
-    else if ((SampleState == HIGH) && (FlushState == LOW) && ((currentMillis - previousMillis) < (configuration.FDMs + configuration.SDMs))) // If Sample is being actively drawn, this will be true
+    // If a sample is being actively drawn
+    else if ((SampleState == HIGH) && (FlushState == LOW) && (elapsedMilliseconds
+              < (config.getFlushDuration() + config.getSampleDuration())))
     {
       delay(1000);
       flushOFF();
       setValveBits();  // Resend Valve signal at periodic rate because noise from brushed motor may turn this off
       Serial.println(F("Re-sent Courtesy Valve Signal"));
     }
-    else if ((SampleState == HIGH) && ((currentMillis - previousMillis) >= (configuration.FDMs + configuration.SDMs)))
+    else if ((SampleState == HIGH) && (elapsedMilliseconds
+              >= (config.getFlushDuration() + config.getSampleDuration())))
     { // Exit Sample Mode and enter Wait Mode
       SampleState = LOW;  // Turn Sample off, lower flag for loop
 
@@ -326,8 +348,8 @@ void loop()
 
   }  // End Sample State-machine
 
- // listen for serial:
   listenForSerial();
+  BLESerial.pollACI();
 
  // Should we go to sleep?
  sleepcheck();
@@ -340,29 +362,28 @@ void loop()
 void wakeUp()
 {
   // Disable external pin interrupt on wake up pin.
-  //detachInterrupt(digitalPinToInterrupt(wakeUpPin));
+  //detachInterrupt(digitalPinInterrupt(wakeUpPin));
   timerEN = true; // Enable timed functions
   sleepEN = false; // disable sleep flag in loop
-}// end ISR
+}
 
 // ================================================================
 // Switch Pin Interrupt Service Routine
 // Switch pin is LOW-True Logic, GND == enabled
 // If switch off, disable timed events
-// In on, enable timed events
+// In switch on,  enable  timed events
 // ================================================================
 void sampleEN()
 {
-    Serial.println(F("Sampler EN function"));
-
     bool intPinState = digitalRead(interruptPin);
     if (!intPinState) // Low-true
     {
-      Serial.println(F("Sampler timed functions enabled"));
-      // RTC.setAlarm(ALM1_MATCH_HOURS, configuration.SAMin, configuration.SAHr, 0);
-      // Serial.print(F("Resetting Alarm 1 for: ")); Serial.print(configuration.SAHr); Serial.print(F(":"));Serial.println(configuration.SAMin);
+      Serial.println(F("Timed functions enabled."));
+      // RTC.setAlarm(ALM1_MATCH_HOURS, config.getSampleMinute(), config.getSampleHour(), 0);
+      // Serial.print(F("Resetting Alarm 1 for: ")); Serial.print(config.getSampleHour()); Serial.print(F(":"));Serial.println(config.getSampleMinute());
       // clearAlarms();
-      // Allow wake up pin from RTC to trigger pin 3 interrupt on low.
+
+      // Allow wake up pin from RTC to trigger interrupt on low.
       attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
       sleepEN = true; // set sleep flag to enable sleep at end of loop
     }
@@ -370,12 +391,12 @@ void sampleEN()
     {
       // Disable external pin interrupt from RTC on wake up pin.
       detachInterrupt(digitalPinToInterrupt(wakeUpPin));
-      Serial.println(F("Sampler timed functions disabled"));
+      Serial.println(F("Timed functions disabled."));
       Serial.println(F("Processor AWAKE and standing by for serial commands"));
       // everythingOff(); // Turn everything off
-      sleepEN = false; //disable sleep flag
-      SampleState = false; // disable sample flag
-      timerEN = false; // disable timed functions flag
+      sleepEN = false;
+      SampleState = false;
+      timerEN = false; // disable timed functions
 
       // We'll just sit awake in loop listening to the serial port
     }
@@ -406,6 +427,31 @@ void sleepcheck()
   }
 }
 
+/**
+ * Set the real time clock and updates the sample alarm.
+ *
+ * Sets the real time clock to the specified year, month, day, hour, and minute.
+ * Then resets the daily or periodic alarm to use the updated time.
+ */
+void setClock(unsigned int year, unsigned int month, unsigned int day, unsigned int hour, unsigned int minute)
+{
+  RTC.adjust(DateTime(year, month, day, hour, minute, 0));
+
+  if (config.getMode() == Mode::PERIODIC)
+    config.refreshPeriodicAlarm();
+  else if (config.getMode() == Mode::DAILY)
+    RTC.setAlarm(ALM1_MATCH_HOURS, config.getSampleMinute(), config.getSampleHour(), 0);
+
+  RTCReportTime(); // print current RTC time
+  Serial.print(F("Next Sample Alarm set for: "));
+  Serial.print(config.getSampleHour());
+  Serial.print(F(":"));
+  Serial.println(config.getSampleMinute());
+}
+
+/**
+ * Print out the RTC's current time to Serial.
+ */
 void RTCReportTime()
 {
   // Report time and next alarm back
@@ -414,37 +460,49 @@ void RTCReportTime()
   Serial.print(now.hour(), DEC); Serial.print(':'); Serial.print(now.minute(), DEC); Serial.print(':'); Serial.print(now.second(), DEC); Serial.println();
 }
 
-void writeEEPROMdefaults()
+/**
+ * Set configuration to default values and write them to EEPROM.
+ *
+ * Overwrites the configuration with default values, writes them to
+ * persistent storage in EEPROM, and resets the sample alarm to use the default
+ * values. The RTC's wakeup interrupt is detached and reattached before and after
+ * these operations.
+ */
+void writeEEPROMDefaults()
 {
-  // Disable external pin interrupt on wake up pin.
   detachInterrupt(digitalPinToInterrupt(wakeUpPin));
+  Serial.println(F("Writing EEPROM defaults..."));
 
-  // EEPROM never written or factory default reset serial received "RST"
-  Serial.print(F("Writing EEPROM defaults. . ."));
+  config.setDefaults();
+  config.writeToEEPROM();
+  Serial.println(F("Finished writing to EEPROM."));
 
-  configuration.SAMin = SampleAlarmMinDef;
-  configuration.SAHr = SampleAlarmHrDef;
-  configuration.SAPer = SampleAlarmPerDef;
-  configuration.FDMs = FlushDurMsDef;
-  configuration.SDMs = SampleDurMsDef;
-  configuration.SVml = SampleVolMlDef;
-  configuration.VNum = SampleValveNumDef;
-  configuration.written = 0;
-  configuration.Is_Daily = true;
+  uint8_t minute = config.getSampleMinute();
+  uint8_t hour   = config.getSampleHour();
 
-  for (int i = 0; i < NUM_PHONES; i++) {
-    configuration.phones[i][0] = '\0';
-  }
-
-  // Save Defaults into EEPROM
-  EEPROM_writeAnything(0, configuration);
-
-  // set RTC timer here:
-  RTC.setAlarm(ALM1_MATCH_HOURS, configuration.SAMin, configuration.SAHr, 0);
-  Serial.println(F("Done"));
-  // Allow wake up pin to trigger interrupt on low.
   attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
 }
 
+/**
+ * Send configuration data struct over Bluetooth Low Energy.
+ */
+void sendConfigOverBluetooth(Configuration config)
+{
+  const size_t bytesToSend = sizeof(config_t);
+  size_t totalSent = 0;
+  uint8_t configData[bytesToSend];
 
+  config.getConfigData(configData);
 
+  while (totalSent < bytesToSend) {
+    size_t sent = 0;
+
+    sent = BLESerial.write(configData, bytesToSend);
+    totalSent += sent;
+
+    if (sent == 0 && totalSent < bytesToSend) {
+      Serial.println(F("ERROR: BLE library failed to send full configuration."));
+      break;
+    }
+  }
+}

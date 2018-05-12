@@ -1,6 +1,6 @@
 /*
   Water Sampler Serial Command Set
-  Authors: Chet Udell, Travis Whitehead
+  Authors: Chet Udell
 
   This file contains the input parsing for the OPEnSampler's serial command set.
   These commands are used to update the OPEnSampler's configuration
@@ -9,12 +9,14 @@
 
   CLK <day> <month> <year> <hour> <minute>
     Set current RTC time and reset sample alarms.
+  FD
+    Prints the flush duration (in milliseconds) to Serial.
   FD <milliseconds>
     Set flush duration period in ms. Should be about 20sec, but will change depending on tubing length.
   PR <index>
-    Print the phone number located at index. Index must be < NUM_PHONES.
+    Print the phone number located at index. Index must be < numSMSRecipients.
   PW <index> <phone number>
-    Write a phone number to location index. Index must be < NUM_PHONES, and phone number may be up to 15 digits.
+    Write a phone number to location index. Index must be < numSMSRecipients, and phone number may be up to phoneNumberLength long.
   RST
     Reset all configuration values to defaults, overwriting previous settings.
   SAD <hour> <minute>
@@ -22,10 +24,13 @@
     Uses 24-hour format.
     Example: "SAD 9 30" sets sample alarm to 9:30AM daily.
     Example: "SAD 16 22" sets sample alarm to 4:22PM daily.
+  SAP
+    Prints the periodic sample alarm length (in minutes) to serial.
   SAP <minutes>
-    Set periodic sample alarm to sample at fixed intervals (in minutes).
-    ex: SAH 30 sets sample alarm to go off every 30min.
-    ex: SAH 47 sets sample alarm to go off 47min.
+    Set periodic sample alarm to sample at fixed intervals (in minutes), starting from the current time.
+    Example: SAP 30 sets sample alarm to go off every 30 minutes.
+  SD
+    Prints the sample duration (in milliseconds) to Serial.
   SD <milliseconds>
     Set sample duration time, or how long pumps run water into each bag (in milliseconds)
   VN <valve number>
@@ -45,8 +50,6 @@
     Example: V0 1 followed by M 1  will begin flush. The sequence (press return where you see / ) V0 0 / V1 1 / M 1  will disable flush and draw water into bag 1.
     You could also write a script in something like Python for drawing water out of the sampler sequentially into your analysis machine without removing bags!
  */
-
- // To Do, disable SQW RTC pin interrupt!!! then re-enable
 
 void listenForSerial()
 {
@@ -79,47 +82,41 @@ void listenForSerial()
           int minz = Serial.parseInt();
 
           setClock(y, m, d, hrz, minz);
-
-          RTCReportTime(); // print current RTC time
-
-          Serial.print(F("Next Sample Alarm set for: "));
-          Serial.print(configuration.SAHr);
-          Serial.print(F(":"));
-          Serial.println(configuration.SAMin);
         }
       }
       break;
 
+    /**
+     * FD <milliseconds>
+     *
+     * Sets flush duration in milliseconds.
+     *
+     * FD
+     *
+     * Prints the flush duration (in milliseconds) to Serial.
+     */
     case 'F':
       chr = Serial.read();
       if (chr == 'D')
       {
         int milliseconds = Serial.parseInt();
 
-        if (milliseconds <= 0)
-        {
-          Serial.println(F("ERROR: Flush duration must be a positive value."));
-          break;
+        if (milliseconds > 0) {
+          config.setFlushDuration(milliseconds);
         }
-
-        if(setFlushDuration(Serial.parseInt()))
-        {
-          Serial.print(F("Flush duration set to "));
-          Serial.print(configuration.FDMs);
-          Serial.println(F(" milliseconds."));
-        }
-        else
-        {
-          Serial.println(F("WARNING: Flush duration must be a positive value."));
+        else {
+          Serial.print(F("Flush duration (in milliseconds) is: "));
+          Serial.println(config.getFlushDuration());
         }
         break;
       }
+
     case 'M':
       //     timerEN = false; // First, disable timed functions, puppet mode
       // Disable external pin interrupt from RTC on wake up pin.
       //***detachInterrupt(digitalPinToInterrupt(wakeUpPin));
 
-      setPump(Serial.parseInt()); // 0 = off, 1 = on, -1 = reverse
+      setPump(getPumpState(Serial.parseInt()));
       break;
 
     case 'P':
@@ -127,14 +124,14 @@ void listenForSerial()
       chr = Serial.read();
 
       /**
-       * "PR <index>"
+       * PR <index>
        *
        * Read a status update recipient's phone number located at index.
        * Example: "PR 23" prints the 23rd phone number.
        */
       if (chr == 'R') {
         index = Serial.parseInt();
-        char * str = getPhone(index);
+        const char * str = config.getSMSNumber(index);
 
         if (str)
           Serial.println(str);
@@ -143,21 +140,21 @@ void listenForSerial()
       }
 
       /**
-       * "PW <index> <phone number>"
+       * PW <index> <phone number>
        *
        * Write a status update recipient's phone number located at index.
        * Example: "PW 2 123456890" overwrites the 2nd phone number.
        */
       else if (chr == 'W')
       {
-        char buffer[17]; // 17 = 1 space, 15 digits, 1 null terminator
+        char buffer[phoneNumberLength + 2]; // + 2 for 1 space & 1 null terminator
         int read;
 
         index = Serial.parseInt();
-        read = Serial.readBytes(buffer, 16);
+        read = Serial.readBytes(buffer, phoneNumberLength + 1);
         buffer[read] = '\0';
 
-        setPhone(index, buffer + 1); // + 1 to ignore the space
+        config.setSMSNumber(index, buffer + 1); // + 1 to ignore the space
 
         Serial.print(F("Status update recipient #"));
         Serial.print(index);
@@ -167,7 +164,7 @@ void listenForSerial()
       break;
 
     /**
-     * "RST"
+     * RST
      *
      * Reset the stored configuration to default values.
      */
@@ -178,64 +175,80 @@ void listenForSerial()
         chr = Serial.read();
         if (chr == 'T')
         {
-          writeEEPROMdefaults();
+          writeEEPROMDefaults();
         }
         break;
       }
 
-    case 'S':  // Set Sample Alarm "SAD 9 0" will set daily samples at 9:00AM
+    case 'S':
       chr = Serial.read();
       if (chr == 'A')
       {
         chr = Serial.read();
+        /**
+         * SAD <hour> <minute>
+         *
+         * Set daily sample alarm to sample once per day at the specified time,
+         * and switch to daily sampling mode. Uses 24-hour format.
+         * Example: "SAD 9 30" sets sample alarm to 9:30AM daily.
+         * Example: "SAD 16 22" sets sample alarm to 4:22PM daily.
+         */
         if (chr == 'D')
         {
-          unsigned int hour = Serial.parseInt();
+          unsigned int hour   = Serial.parseInt();
           unsigned int minute = Serial.parseInt();
 
-          setDailyAlarm(hour, minute);
-
-          Serial.println(F("Sample alarm set to Daily Mode. Taking samples at "));
-          Serial.print(configuration.SAHr);
-          Serial.print(F(":"));
-          Serial.println(configuration.SAMin);
+          config.setDailyAlarm(hour, minute);
           break;
         }
+        /**
+         * SAP <minutes>
+         *
+         * Set periodic alarm to sample at fixed intervals (in minutes),
+         * starting from the current time.
+         * Example: SAP 30 sets sample alarm to go off every 30 minutes.
+
+         * SAP
+         *
+         * Prints the periodic sample alarm length (in minutes) to serial.
+         */
         if (chr == 'P')
         {
-          unsigned int minutes = Serial.parseInt();
+          int minutes = Serial.parseInt();
 
-          if (setPeriodicAlarm(minutes))
-          {
-            Serial.print(F("Sample alarm set to Periodic Mode. Taking sample every "));
-            Serial.print(configuration.SAPer);
-            Serial.println(F(" minutes."));
+          if (minutes > 0) {
+            config.setPeriodicAlarm(minutes);
           }
+          else {
+            Serial.print(F("Periodic sample alarm length (in minutes) is: "));
+            Serial.println(config.getPeriodicAlarmLength());
+          }
+
           break;
         }
       }
       /**
-       * "SD <milliseconds>"
+       * SD <milliseconds>
        *
        * Set the sample duration, or the time in milliseconds that the pump runs
        * when taking a single sample.
+       *
+       * SD
+       *
+       * Prints the sample duration (in milliseconds) to Serial.
        */
       else if (chr == 'D')
       {
         int milliseconds = Serial.parseInt();
 
-        if(milliseconds <= 0)
-        {
-          Serial.println(F("ERROR: Sample duration must be a positive value."));
-          break;
+        if (milliseconds > 0) {
+          config.setSampleDuration(milliseconds);
+        }
+        else {
+          Serial.print(F("Sample duration length (in milliseconds) is: "));
+          Serial.println(config.getSampleDuration());
         }
 
-        if(setSampleDuration(milliseconds))
-        {
-          Serial.print(F("Sample duration set to "));
-          Serial.print(configuration.SDMs);
-          Serial.println(F(" milliseconds."));
-        }
 
         break;
       }
@@ -258,11 +271,9 @@ void listenForSerial()
           break;
         }
 
-        if (setNextValve(valveNumber))
-        {
-          Serial.print(F("The next valve to sample to is: "));
-          Serial.println(configuration.VNum + 1);
-        }
+        // The valve number is decremented before storing because it will be
+        // incremented automatically in the main loop.
+        config.setValveNumber(valveNumber - 1);
         break;
       }
       /**
@@ -288,14 +299,13 @@ void listenForSerial()
       }
 
     default:
-      Serial.println(F("WARNING: Invalid command received."));
+      Serial.println(F("ERROR: Invalid command received."));
       break;
 
   }
 
   // Save Sample configuration into EEPROM for next power-up, *IF* settings not changed in puppet mode
-  configuration.written = eepromValidationValue; //Set EEPROM Confirmation value so we know this has been written before
-  EEPROM_writeAnything(0, configuration);
+  config.writeToEEPROM();
   // If nothing has disabled timer, or if timer has been resumed, resume sampler period
   // Allow wake up pin to trigger interrupt on low.
   //*** attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
