@@ -9,7 +9,7 @@
         android:text="Phone Commands"
         android:textSize="20dp"
         android:textStyle="bold"
-        android:layout_marginTop="62dp"
+        android:layout_marginTop="30dp"
         android:layout_alignParentTop="true"
         android:layout_alignLeft="@+id/phoneCommands"
         android:layout_alignStart="@+id/phoneCommands">
@@ -51,12 +51,14 @@
         android:layout_alignLeft="@+id/phoneNumbers"
         android:layout_alignStart="@+id/phoneNumbers"
         android:layout_marginBottom="27dp"
+        android:textStyle="bold"
         android:text="Phone Numbers" />
 
     <TextView
         android:id="@+id/addMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textStyle="bold"
         android:layout_alignBottom="@+id/phoneNumbers"
         android:layout_alignLeft="@+id/phoneNumbers"
         android:layout_alignStart="@+id/phoneNumbers"
@@ -71,6 +73,7 @@
         android:layout_alignBottom="@+id/phoneNumberMsg"
         android:layout_alignLeft="@+id/updateNumber"
         android:layout_alignStart="@+id/updateNumber"
+        android:textStyle="bold"
         android:text="New Phone Number" />
 
     <Button
@@ -85,18 +88,18 @@
 
     <EditText
         android:id="@+id/updateNumber"
-        android:layout_width="200dp"
+        android:layout_width="162dp"
         android:layout_height="wrap_content"
-        android:background="#FFF"
-        android:textColor="#000"
         android:layout_alignBaseline="@+id/addNumber"
         android:layout_alignBottom="@+id/addNumber"
+        android:layout_toEndOf="@+id/phoneCommandsText"
         android:layout_toRightOf="@+id/phoneCommandsText"
-        android:layout_toEndOf="@+id/phoneCommandsText" />
+        android:background="#FFF"
+        android:layout_marginRight="10dp"
+        android:textColor="#000" />
 
     <EditText
         android:id="@+id/addNumber"
-
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:background="#FFF"

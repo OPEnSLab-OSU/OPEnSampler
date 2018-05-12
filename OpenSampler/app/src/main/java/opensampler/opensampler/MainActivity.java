@@ -30,8 +30,8 @@ public class MainActivity extends AppCompatActivity {
     private Button mPhoneButt;
     private ImageButton mInfoButt;
     private TextView mScreenName;
+	public BluetoothService mainService = null;
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -151,9 +151,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-
-
 
 
     private void setupViewPager(ViewPager viewPager){

@@ -2,8 +2,8 @@
     <string name="app_name">OpenSampler Companion App</string>
 
     <string-array name="schedItems">
-        <item>Periodic</item>
         <item>Daily</item>
+        <item>Periodic</item>
     </string-array>
 
     <string-array name="phoneActions">
@@ -54,7 +54,7 @@
     <string name="scanning">Scanning for devices...</string>
     <string name="device">Device:</string>
     <string name="connectBut">Connect</string>
-    <string name="sampleBut">Samples</string>
+    <string name="puppetBut">Puppet</string>
     <string name="scheduleBut">Schedule</string>
     <string name="phonesBut">Phone</string>
 </resources>

@@ -9,9 +9,9 @@
         android:id="@+id/timeSelectorActivity"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Go to Sample Activity"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:text="Go to Puppet Activity" />
 
     <TextView
         android:id="@+id/motorMess"
@@ -19,7 +19,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_marginLeft="10dp"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="30dp"
+        android:textStyle="bold"
         android:text="Motor Function"
         android:textSize="20dp" />
 
@@ -59,6 +60,7 @@
         android:layout_below="@+id/motorCommands"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="10dp"
+        android:textStyle="bold"
         android:textSize="20dp"
         android:text="Valves" />
 

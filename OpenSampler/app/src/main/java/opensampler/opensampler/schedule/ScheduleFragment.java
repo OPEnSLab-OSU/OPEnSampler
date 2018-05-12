@@ -62,6 +62,7 @@ import java.util.Date;
 
 import opensampler.opensampler.BluetoothService;
 import opensampler.opensampler.DeviceListActivity;
+import opensampler.opensampler.MainActivity;
 import opensampler.opensampler.R;
 
 /**
@@ -111,6 +112,8 @@ public class ScheduleFragment extends Fragment {
     private static final int STATE_OFF = 10;
     private int mState = UART_PROFILE_DISCONNECTED;
     private BluetoothService mService = null;
+
+
     private BluetoothDevice mDevice = null;
     private BluetoothAdapter mBtAdapter = null;
     private ListView messageListView;
@@ -359,6 +362,8 @@ public class ScheduleFragment extends Fragment {
         public void onServiceConnected(ComponentName className, IBinder rawBinder) {
             mService = ((BluetoothService.LocalBinder) rawBinder).getService();
             Log.d(TAG, "onServiceConnected mService= " + mService);
+            MainActivity xxx = (MainActivity)getActivity();
+            xxx.mainService = mService;
             if (!mService.initialize()) {
                 Log.e(TAG, "Unable to initialize Bluetooth");
                 getActivity().finish();
@@ -369,6 +374,8 @@ public class ScheduleFragment extends Fragment {
         public void onServiceDisconnected(ComponentName classname) {
             ////     mService.disconnect(mDevice);
             mService = null;
+            MainActivity xxx = (MainActivity)getActivity();
+            xxx.mainService = mService;
         }
     };
 
@@ -399,11 +406,9 @@ public class ScheduleFragment extends Fragment {
                         String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
                         Log.d(TAG, "UART_CONNECT_MSG");
                         btnConnect.setText("Disconnect");
-                        //edtMessage.setEnabled(true);
                         msubmitSched.setEnabled(true);
                         ((TextView) getActivity().findViewById(R.id.deviceName)).setText(mDevice.getName()+ " - ready");
                         listAdapter.add("["+currentDateTimeString+"] Connected to: "+ mDevice.getName());
-                        //messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
                         mState = UART_PROFILE_CONNECTED;
                     }
                 });
@@ -416,14 +421,11 @@ public class ScheduleFragment extends Fragment {
                         String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
                         Log.d(TAG, "UART_DISCONNECT_MSG");
                         btnConnect.setText("Connect");
-                        //edtMessage.setEnabled(false);
                         msubmitSched.setEnabled(false);
                         ((TextView) getActivity().findViewById(R.id.deviceName)).setText("Not Connected");
                         listAdapter.add("["+currentDateTimeString+"] Disconnected to: "+ mDevice.getName());
                         mState = UART_PROFILE_DISCONNECTED;
                         mService.close();
-                        //setUiState();
-
                     }
                 });
             }
@@ -496,6 +498,8 @@ public class ScheduleFragment extends Fragment {
         getActivity().unbindService(mServiceConnection);
         mService.stopSelf();
         mService= null;
+        MainActivity xxx = (MainActivity)getActivity();
+        xxx.mainService = mService;
 
     }
 

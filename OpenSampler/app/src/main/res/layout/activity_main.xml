@@ -64,12 +64,12 @@
             android:id="@+id/samp"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textSize="10dp"
             android:layout_alignBaseline="@+id/conn"
             android:layout_alignBottom="@+id/conn"
             android:layout_toRightOf="@+id/conn"
             android:layout_weight=".25"
-            android:text="@string/sampleBut" />
+            android:text="@string/puppetBut"
+            android:textSize="10dp" />
 
         <Button
             android:id="@+id/sched"
