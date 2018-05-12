@@ -1,8 +1,6 @@
-#include <RTClibExtended.h> // Library to configure DS3231
 #include "EEPROMAnything.h" // For reading/writing to EEPROM
 #include "Configuration.h"
-
-extern RTC_DS3231 RTC;
+#include "Globals.h"
 
 /**
  * Overwrite config with default values.
@@ -18,9 +16,7 @@ void Configuration::setDefaults()
   configData.written = false;
   configData.mode = Mode::DAILY;
 
-  // DEBUG
-  // memset(configData.SMSNumbers, 0, sizeof(char) * numSMSRecipients * (phoneNumberLength + 1));
-  memset(configData.SMSNumbers, 'A', sizeof(char) * numSMSRecipients * (phoneNumberLength + 1));
+  memset(configData.SMSNumbers, 0, sizeof(char) * numSMSRecipients * (phoneNumberLength + 1));
 }
 
 /**
@@ -253,7 +249,7 @@ uint8_t Configuration::getSampleMinute()
  * index is undefined. The number is stored without punctuation or whitespace
  * (e.g. 123456789012345).
  */
-const char * Configuration::getSMSNumber(int index)
+char * Configuration::getSMSNumber(int index)
 {
   if (index >= numSMSRecipients)
     return NULL;

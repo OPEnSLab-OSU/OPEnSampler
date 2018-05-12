@@ -39,10 +39,9 @@
 */
 #include <Arduino.h>
 #include "Configuration.h"
-// #include "Defaults.h" TODO
+#include "Globals.h"
 #include "ValveAddressing.h"
 
-extern Configuration config;
 extern unsigned char TPICBuffer[4];
 
 extern void strobeTPICs();
@@ -196,7 +195,7 @@ void setValveBits()
 void shiftl(void *object, size_t size)
 {
    unsigned char *byte; // pointer to Array address
-   for ( byte = object; size--; ++byte )
+   for ( byte = (unsigned char *) object; size--; ++byte )
    {
       unsigned char bitz = 0;
       if ( size )

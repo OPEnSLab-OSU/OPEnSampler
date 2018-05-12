@@ -7,23 +7,25 @@ extern Adafruit_BLE_UART BLESerial;
  */
 void ACICallback(aci_evt_opcode_t event)
 {
+#ifdef DEBUG
   switch(event)
   {
     case ACI_EVT_DEVICE_STARTED:
-      Serial.println(F("BLE: Advertising started."));
+      Serial.println(F("DEBUG: BLE: Advertising started."));
       break;
 
     case ACI_EVT_CONNECTED:
-      Serial.println(F("BLE: Connected."));
+      Serial.println(F("DEBUG: BLE: Connected."));
       break;
 
     case ACI_EVT_DISCONNECTED:
-      Serial.println(F("BLE: Disconnected or advertising timed out."));
+      Serial.println(F("DEBUG: BLE: Disconnected or advertising timed out."));
       break;
 
     default:
       break;
   }
+#endif
 }
 
 /**
@@ -31,7 +33,8 @@ void ACICallback(aci_evt_opcode_t event)
  */
 void RXCallback(uint8_t *buffer, uint8_t length)
 {
-  Serial.print(F("DEBUG: Received "));
+#ifdef DEBUG
+  Serial.print(F("DEBUG: BLE: Received "));
   Serial.print(length);
   Serial.print(F(" bytes: "));
 
@@ -47,7 +50,7 @@ void RXCallback(uint8_t *buffer, uint8_t length)
   }
 
   Serial.println(F(" ]"));
+#endif
 
-  Serial.println(F("DEBUG: Parsing command from Bluetooth."));
   BLEParser.process((char *) buffer, length);
 }

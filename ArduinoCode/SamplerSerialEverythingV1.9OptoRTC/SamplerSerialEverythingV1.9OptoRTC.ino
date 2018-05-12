@@ -40,7 +40,7 @@ GPIO13 - SPI SCLK - TPIC serial clock
 ~ i2c ~
 SCL/SDA = to RTC SCL/SDA
 
-Sampler Use:
+Sampler Use:r
 Power cycle on best practice: Be sure to supply the 12VDC source before plugging Arduino into USB
 Power cycle off: unplug Arduino USB before unplugging 12VDC supply
 
@@ -54,11 +54,7 @@ Firmware SAFETY Features:
 Pumps will not turn on if no valves are open at that time.
 Likewise, turning off all valves (including flush valve) will automatically shut off pumps
 */
-#define DEBUG 1 // TODO
 
-#include "Adafruit_BLE_UART.h" // Library for nRF8001 (BLE breakout)
-#include "Adafruit_FONA.h"     // Library for FONA 808 (GSM/SMS breakout)
-#include <SoftwareSerial.h>    // Used with FONA 808
 #include <Wire.h>              // i2c connection for RTC DS3231
 #include <RTClibExtended.h>    // Library to configure DS3231
 #include "LowPower.h"          // Use Low-Power library from Sparkfun and RTC pin interrupt (P3) to manage sleep and scheduling at same time
@@ -68,6 +64,7 @@ Likewise, turning off all valves (including flush valve) will automatically shut
 #include "CommandParser.h"
 #include "Configuration.h"
 #include "Defaults.h"
+#include "Globals.h"
 #include "ValveAddressing.h"
 
 Configuration config;
@@ -77,7 +74,10 @@ Configuration config;
 //----------------------------
 // Switch Interrupt pin is LOW-True Logic, GND == enabled
 const byte interruptPin = 2;  // Digital pin switch is attached to that enables or disables the sampler timer
-const byte wakeUpPin = A0; // Pin to recieve RTC's wake up interrupt. // TODO
+
+// TODO: Not currently a proper interrupt pin, as PinChangeInterrupt conflicts with SoftwareSerial...
+const byte wakeUpPin = A0; // Pin to recieve RTC's wake up interrupt.
+
 const byte pumpPin1 = 8; // Motor MOSFET 1=forward, 0=reverse
 const byte pumpPin2 = 9; // Motor MOSFET 0=forward, 1=reverse
 const byte rClockPin = 10; // TPIC register clock pin, acts as SPI CS (chip select)
@@ -86,7 +86,7 @@ const byte rClockPin = 10; // TPIC register clock pin, acts as SPI CS (chip sele
 // Bluetooth Pins & Serial
 //----------------------------
 const byte bleReqPin = A1; // SPI CS (chip select) pin
-const byte bleRdyPin = 3;  // Interrupt pin for when data is ready // TODO
+const byte bleRdyPin = 3;  // Interrupt pin for when data is ready // TODO: See wakeUpPin, swap as needed
 const byte bleRstPin = A2; // Used to reset board on startup
 
 //----------------------------
@@ -103,7 +103,7 @@ volatile bool sleepEN = false; // Flag to check in loop to see if we should slee
 volatile bool SampleState = LOW; // SampleState used to set valve and motor states for taking new sample
 volatile bool FlushState = LOW;  // used to set state-machine flush flag
 
-volatile unsigned long previousMillis = 0;   // will store last time Sample was taken
+volatile unsigned long previousMillis = 0; // will store last time Sample was taken
 
 //---------------------------
 // Valve Addressing Variables
@@ -119,13 +119,12 @@ Adafruit_BLE_UART BLESerial = Adafruit_BLE_UART(bleReqPin, bleRdyPin, bleRstPin)
 //--------------------------------
 // FONA 808 for SMS Status Updates
 //--------------------------------
-// TODO: This causes infinite loop
-bool enableSMS = true; // Set to false if not using SMS status updates (requires Fona 808)
-
+#if FONA_ENABLED
 SoftwareSerial fonaSS = SoftwareSerial(fonaTXPin, fonaRXPin);
 SoftwareSerial *fonaSerial = &fonaSS;
 Adafruit_FONA fona = Adafruit_FONA(fonaRstPin);
-//----------------------------
+#endif
+//--------------------------------
 
 RTC_DS3231 RTC;
 
@@ -134,9 +133,6 @@ void setup() {
   while (!Serial)
     delay(1000);
   Serial.println(F("Beginning setup."));
-
-  // DEBUG
-  Serial.println(sizeof(fona) + sizeof(fonaSerial) + sizeof(fonaSS) + sizeof(BLESerial));
 
   pinMode(interruptPin, INPUT_PULLUP);
   pinMode(wakeUpPin, INPUT_PULLUP);
@@ -154,23 +150,19 @@ void setup() {
   if (!config.getWritten())
     writeEEPROMDefaults();
 
-  // Bluetooth Setup (see Bluetooth.ino)
-  if (enableBluetooth) {
-    BLESerial.setRXcallback(RXCallback);
-    BLESerial.setACIcallback(ACICallback);
-    BLESerial.setDeviceName((const char*) F("Sampler")); // Can be no longer than 7 characters
-    BLESerial.begin();
-    Serial.println(F("Bluetooth initialized."));
-  }
+  BLESerial.setRXcallback(RXCallback);
+  BLESerial.setACIcallback(ACICallback);
+  BLESerial.setDeviceName((const char*) F("Sampler")); // Can be no longer than 7 characters
+  BLESerial.begin();
+  Serial.println(F("Bluetooth initialized."));
 
   // FONA 808 Setup (for SMS status updates)
-  if (enableSMS) {
+#if FONA_ENABLED
     fonaSerial->begin(baud);
     if (! fona.begin(*fonaSerial)) {
-      Serial.println(F("ERROR: Couldn't find FONA, disabling SMS status updates. Restart to try again."));
-      //enableSMS = false; TODO
+      Serial.println(F("ERROR: Couldn't find FONA..."));
     }
-  }
+#endif
 
   // Enable and Config SPI hardware:
   pinMode(rClockPin, OUTPUT);
@@ -180,7 +172,7 @@ void setup() {
   // RTC Timer settings here
   if (! RTC.begin()) {
     Serial.println(F("Couldn't find RTC. Hanging..."));
-    while (1);
+    while (true);
   }
 
   Serial.print(F("Flush duration (ms) is: "));
@@ -248,9 +240,11 @@ void loop()
     if (config.getValveNumber() >= numValves)
     {
       Serial.println(F("Total number of samples reached! Sleeping forever..."));
-      // warning, because wakeup pin is disabled above, sleep forever, no wakeup from here
+      // Because wakeup pin is disabled above, sleep forever, no wakeup from here
 
-      sendSMSAll((const char *) F("OPEnSampler: Total number of samples reached! Sleeping.")); // TODO
+#if FONA_ENABLED
+      sendSMSAll((const char *) F("OPEnSampler says: HELLO WORLD"));
+#endif
 
       sleepEN = true; // Set sleep flag to sleep at end of loop
     }
@@ -272,8 +266,10 @@ void loop()
         config.refreshPeriodicAlarm();
       }
 
-      Serial.println(F("Time to take a sample."));
-      sendSMSAll((const char *) F("OPEnSampler: Taking a sample"));
+      Serial.println(F("Taking a water sample."));
+#if FONA_ENABLED
+      sendSMSAll((const char *) F("OPEnSampler says: Taking a sample!"));
+#endif
 
       previousMillis = millis();  // Remember the time at this point
       SampleState = HIGH; // Trigger new sample cycle, raise sample flag for Loop
@@ -483,68 +479,30 @@ void writeEEPROMDefaults()
 
   uint8_t minute = config.getSampleMinute();
   uint8_t hour   = config.getSampleHour();
-  // RTC.setAlarm(ALM1_MATCH_HOURS, minute, hour, 0);
 
   attachInterrupt(digitalPinToInterrupt(wakeUpPin), wakeUp, FALLING);
 }
 
 /**
- * Send configuration data over Bluetooth.
+ * Send configuration data struct over Bluetooth Low Energy.
  */
-void sendConfigOverBluetooth()
+void sendConfigOverBluetooth(Configuration config)
 {
-  // size_t configSize = sizeof(config_t);
-  // uint8_t configData[configSize];
-  // size_t configSize = 6;
-  // uint8_t configData[configSize] = "HELLO";
-  size_t configSize = 60;
-  uint8_t configData[configSize + 1] = "HELLO";
-  size_t sent, bytesThisPass = 0;
+  const size_t bytesToSend = sizeof(config_t);
+  size_t totalSent = 0;
+  uint8_t configData[bytesToSend];
 
-  // DEBUG
-  Serial.print(F("DEBUG: struct size: "));
-  Serial.println(configSize);
-  // --------------------------------
-  // config.getConfigData(configData);
+  config.getConfigData(configData);
 
-  while (configSize) {
-    // DEBUG
-    Serial.print(F("DEBUG: Loop start configSize: "));
-    Serial.println(configSize);
-    // --------------------------------
+  while (totalSent < bytesToSend) {
+    size_t sent = 0;
 
-    bytesThisPass = configSize;
-    // if (bytesThisPass > UCHAR_MAX)
-    //   bytesThisPass = UCHAR_MAX;
-    // DEBUG
-    if (bytesThisPass > 20)
-      bytesThisPass = 20;
+    sent = BLESerial.write(configData, bytesToSend);
+    totalSent += sent;
 
-    Serial.print(F("DEBUG: bytesThisPass: "));
-    Serial.println(bytesThisPass);
-
-    sent = (size_t) BLESerial.write(&configData[sent], bytesThisPass);
-    Serial.print(F("DEBUG: Sent: "));
-    Serial.println(sent);
-    if (sent < bytesThisPass) {
-      Serial.println(F("ERROR: Failed to send over BLE."));
-
-      // DEBUG
-      // Serial.println(F("DEBUG: Waiting..."));
-      // delay(2000);
-    }
-
-    // Break when all is written
-    // TODO: Compare to - bytesThisPass
-    if (!(configSize -= sent)) break;
-
-    // DEBUG
-    if (sent == 0) {
-      Serial.println(F("DEBUG: Sent 0, quitting."));
+    if (sent == 0 && totalSent < bytesToSend) {
+      Serial.println(F("ERROR: BLE library failed to send full configuration."));
       break;
     }
-
-    Serial.print(F("DEBUG: Loop end configSize: "));
-    Serial.println(configSize);
   }
 }

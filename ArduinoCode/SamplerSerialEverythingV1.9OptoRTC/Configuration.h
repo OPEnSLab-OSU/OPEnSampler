@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "Defaults.h"
 
 enum class Mode {DAILY, PERIODIC};
@@ -50,7 +52,7 @@ public:
   unsigned long getSampleDuration();
   uint8_t getSampleHour();
   uint8_t getSampleMinute();
-  const char * getSMSNumber(int index);
+  char * getSMSNumber(int index);
   uint16_t getPeriodicAlarmLength();
   uint8_t getValveNumber();
 

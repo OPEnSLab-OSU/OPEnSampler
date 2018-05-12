@@ -1,5 +1,8 @@
 #pragma once
 
+// Uncomment to enable debugging logs (in Serial)
+#define DEBUG
+
 /* ----------------------
  * Configuration Defaults
  * ----------------------
@@ -38,7 +41,7 @@ const bool SampleValveNumDef = 0;
  */
 
 // Quantity of phone numbers to store in EEPROM that will recieve SMS status updates.
-const uint8_t numSMSRecipients = 2;
+const uint8_t numSMSRecipients = 5;
 
 // Maximum number of digits in a phone number
 const uint8_t phoneNumberLength = 11;
@@ -54,11 +57,9 @@ const int numValves = 24; // Amount of valves in each module (currently only sup
 /* --------------------
  * OPEnSampler Features
  * --------------------
+ * TODO: It would be nice to do this for the BLE logic, too.
  */
-// TODO: Decide where to put these
-// Maybe make enableSMS const and use another value for tracking it?
-const bool enableBluetooth = true;
-extern bool enableSMS; // Whether to send SMS status updates (set in SamplerSerialEverything)
+#define FONA_ENABLED true
 
 
 /* --------------------

@@ -1,15 +1,11 @@
 #include <errno.h>
 #include <string.h>
 
-#include "Adafruit_BLE_UART.h"
-
 #include "CommandParser.h"
+#include "Globals.h"
 #include "ValveAddressing.h"
 
-// Globals defined in SamplerSerialEverything
-extern Configuration config;
-extern Adafruit_BLE_UART BLESerial;
-extern void sendConfigOverBluetooth();
+extern void sendConfigOverBluetooth(Configuration config);
 extern void setClock(uint16_t year, uint16_t month, uint16_t day, uint16_t hour, uint16_t minute);
 extern void writeEEPROMDefaults();
 
@@ -51,7 +47,7 @@ bool CommandParser::process(char *buffer, uint8_t length) const
 
     // Parse arguments and execute
     if (length > 1) {
-      CommandParser::parseArguments(command, length); // TODO: remove space here?
+      CommandParser::parseArguments(command, length);
     }
     // No arguments, so go straight to execute
     else {
@@ -89,7 +85,9 @@ bool CommandParser::parseArguments(const char *buffer, uint8_t length) const
   argc++; // There's one more argument than delimiters
 
   // Parse arguments
-  char *token = strtok((char *) buffer + 1, delimiter); // TODO: Remove space earlier
+  // TODO: It would be cleaner to, instead of doing buffer + 1, remove the
+  //       preceding space earlier in the flow.
+  char *token = strtok((char *) buffer + 1, delimiter);
 
   char *argv[argc];
   for (int count = 0; token != NULL; count++) {
@@ -98,7 +96,7 @@ bool CommandParser::parseArguments(const char *buffer, uint8_t length) const
   }
 
   // Execute command
-  if(!CommandParser::execute(buffer[0], argv, argc)) { // TODO: What is buffer[0]
+  if(!CommandParser::execute(buffer[0], argv, argc)) {
     Serial.println(F("ERROR: Invalid command received."));
     return false;
   }
@@ -122,19 +120,10 @@ bool CommandParser::execute(char identifier, char *args[], size_t args_size) con
   int n;
   char * str;
 
-  // DEBUG
-  Serial.print(F("DEBUG: About to execute with identifier: "));
-  Serial.println(identifier);
-  Serial.print(F("DEBUG: Hex is: "));
-  Serial.println((char) identifier, HEX);
-  Serial.print(F("DEBUG: args_size is: "));
-  Serial.println(args_size);
-  //------------------------------
-
   switch (identifier)
   {
     case 'B':
-      sendConfigOverBluetooth();
+      sendConfigOverBluetooth(config);
       break;
 
     case 'C':
