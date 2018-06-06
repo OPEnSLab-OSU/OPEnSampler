@@ -73,6 +73,9 @@ public class PhoneFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState){
         final View view = inflater.inflate(R.layout.phone_frag, container, false);
 
+        //Filled with variables from the phone_frag.xml file
+        //For more in-depth comments, check schedulefragment.java for naming conventions and basic functionality
+
         //Spinners
             phoneMenu = (Spinner) view.findViewById(R.id.phoneCommands);
             phoneNumbers = (Spinner) view.findViewById(R.id.phoneNumbers);
@@ -89,10 +92,12 @@ public class PhoneFragment extends Fragment {
             newNumber = (TextView) view.findViewById(R.id.numberToChange);
             addPhoneNumber = (TextView) view.findViewById(R.id.addMessage);
 
+        //Similar Functionality to ScheduleFragment.java
         submitPhoneAdd.setEnabled(false);
         submitPhoneDelete.setEnabled(false);
         submitPhoneUpdate.setEnabled(false);
 
+        //Similar to how ScheduleFragment hide and showed different forms depending on the dropdown
         phoneNumbers.setVisibility(view.INVISIBLE);
         addPhoneNumber.setVisibility(view.INVISIBLE);
         phoneNumberMsg.setVisibility(view.INVISIBLE);
@@ -108,6 +113,7 @@ public class PhoneFragment extends Fragment {
             public void onClick(View v){
                 temp = phoneMenu.getSelectedItem().toString();
                 if(temp.equals("Add")){
+                    //Add Phone Number Elements Set to Visible and Delete and Update to Invisible
                     //add
                     phoneAdd.setVisibility(view.VISIBLE);
                     submitPhoneAdd.setVisibility(view.VISIBLE);
@@ -123,6 +129,7 @@ public class PhoneFragment extends Fragment {
 
                 }
                 if(temp.equals("Remove")){
+                    //Remove Phone Number Elements Set to Visible and Update and Add to Invisible
                     //add
                     phoneAdd.setVisibility(view.INVISIBLE);
                     submitPhoneAdd.setVisibility(view.INVISIBLE);
@@ -137,6 +144,7 @@ public class PhoneFragment extends Fragment {
                     submitPhoneDelete.setVisibility(view.VISIBLE);
                 }
                 if(temp.equals("Update")){
+                    //Update Phone Number Elements Set to Visible and Add and Delete are Invisible
                     //add
                     phoneAdd.setVisibility(view.INVISIBLE);
                     submitPhoneAdd.setVisibility(view.INVISIBLE);
