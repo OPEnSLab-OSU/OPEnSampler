@@ -15,7 +15,6 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import opensampler.opensampler.connections.ConnectionFragment;
 import opensampler.opensampler.phone.PhoneFragment;
 import opensampler.opensampler.puppet.PuppetFragment;
 import opensampler.opensampler.schedule.ScheduleFragment;
@@ -50,32 +49,32 @@ public class MainActivity extends AppCompatActivity {
 
         mScreenName = (TextView) findViewById(R.id.screenName);
 
-        mScreenName.setText("Connections");
+        mScreenName.setText("Puppet Commands");
         mConnButt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view){
-                mScreenName.setText("Connections");
-                setViewPager(0);            }
+
+            }
         });
         mSampButt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view){
                 mScreenName.setText("Puppet Commands");
-                setViewPager(1);
+                setViewPager(0);
             }
         });
         mSchedButt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view){
                 mScreenName.setText("Scheduler");
-                setViewPager(2);
+                setViewPager(1);
             }
         });
         mPhoneButt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view){
                 mScreenName.setText("Phone Commands");
-                setViewPager(3);
+                setViewPager(2);
             }
         });
 
@@ -88,15 +87,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageSelected(int position) {
                 if(position == 0){
-                    mScreenName.setText("Connections");
-                }
-                if(position == 1){
                     mScreenName.setText("Puppet Commands");
                 }
-                if(position == 2){
+                if(position == 1){
                     mScreenName.setText("Scheduler");
                 }
-                if(position == 3){
+                if(position == 2){
                     mScreenName.setText("Phone Commands");
                 }
             }
@@ -152,10 +148,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     private void setupViewPager(ViewPager viewPager){
         SectionStatePagerAdapter adapter = new SectionStatePagerAdapter(getSupportFragmentManager());
-        adapter.addFragment(new ConnectionFragment(), "ConnectionFragment");
         adapter.addFragment(new PuppetFragment(), "PuppetFragment");
         adapter.addFragment(new ScheduleFragment(), "ScheduleFragment");
         adapter.addFragment(new PhoneFragment(), "PhoneFragment");
