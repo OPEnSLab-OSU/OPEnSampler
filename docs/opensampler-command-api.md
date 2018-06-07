@@ -17,13 +17,34 @@ consistent, and parse commands & arguments correctly regardless of their source.
 All commands begin with a command identifier which consists of a string of
 capital letters or a single capital letter. This identifier is then followed by
 a series of arguments (when needed). The specific syntax varies depending on
-whether the command is parsed from USB serial or from Bluetooth.
+whether the command is parsed from USB serial or from Bluetooth. See below.
 
 ### USB Serial Command Syntax
-TODO
+
+Commands used over USB Serial begin with an identifying string (of one to three
+characters). If there are no arguments the command ends there, otherwise it's
+followed by a space and then arguments delimited by spaces.
+
+#### Examples
+
+* Reset the device: `RST`
+* Set the 1st phone number: `PW 1 1234567890`
+* Set the clock: `CLK 25 2 11 2018 33 0`
 
 ### Bluetooth Command Syntax
-TODO
+
+Commands for Bluetooth begin with a single identifying byte/character, followed
+by any number of arguments separated by a delimiting character, and ending with
+a terminating charcter. The delimiting and terminating characters should only
+occur for those purposes. They can be specified in the code, but the argument
+delimiter defaults to ',', and the terminating character defaults to '|'.
+
+#### Examples
+
+* Reset the device: `R|`
+* Set the 1st phone number: `W1,1234567890|`
+* Set the clock: `C25,2,11,2018,33,0|`
+
 
 ## List of Commands
 
@@ -44,3 +65,4 @@ TODO
  | VN                   | V                          | valve number                   | Sets the next valve/bag to sample into (they're numbered, starting from 1).
  | VS                   | U                          | valve number, valve state      | Sets the specificed valve's state: open (1), closed (0)
  |                      | B                          |                                | Sends the raw configuration data over Bluetooth.
+
