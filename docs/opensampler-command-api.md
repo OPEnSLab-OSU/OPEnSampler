@@ -29,7 +29,8 @@ followed by a space and then arguments delimited by spaces.
 
 * Reset the device: `RST`
 * Set the 1st phone number: `PW 1 1234567890`
-* Set the clock: `CLK 25 2 11 2018 33 0`
+* Set the clock: `CLK 25 2 2018 11 0`
+
 
 ### Bluetooth Command Syntax
 
@@ -43,7 +44,8 @@ delimiter defaults to ',', and the terminating character defaults to '|'.
 
 * Reset the device: `R|`
 * Set the 1st phone number: `W1,1234567890|`
-* Set the clock: `C25,2,11,2018,33,0|`
+* Set the clock: `C25,2,2018,11,0|`
+
 
 
 ## List of Commands
@@ -65,4 +67,3 @@ delimiter defaults to ',', and the terminating character defaults to '|'.
  | VN                   | V                          | valve number                   | Sets the next valve/bag to sample into (they're numbered, starting from 1).
  | VS                   | U                          | valve number, valve state      | Sets the specificed valve's state: open (1), closed (0)
  |                      | B                          |                                | Sends the raw configuration data over Bluetooth.
-
