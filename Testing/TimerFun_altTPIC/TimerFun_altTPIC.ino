@@ -98,7 +98,7 @@ void loop() {
     {
       valvePrint = false; //flag to stop printing valve number after first time
     }
-    openValve(valveNum);
+    openValve();
   }
 } // end loop
 

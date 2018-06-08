@@ -29,13 +29,23 @@ volatile int programCounter = 0; // counter to step through program array
 volatile bool valvePrint = true; //flag to control when valve number is printing in valveOpen
 volatile bool printedOnce = false; //flag to control when valve number is printing in valveOpen
 
-// This array determines the sequence of actions to take
-// during a sample condition, see action library in SamplerFunctions.h
-short myProgram[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+// This array determines the sequence of actions to take - declaring size
+short myProgram[] = {
+  0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0,
+  0, 0, 0
+};
 
-// This array determines the timing of the above actions sequence numbers
-// during a sample condition, see action library in SamplerFunctions.h
-uint16_t myTimes[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+// This array determines the timing of the above actions sequence numbers - declaring size
+uint16_t myTimes[] = {
+  0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0,
+  0, 0, 0
+};
 
 //----------------------------
 // Valve Operation Variables
@@ -46,7 +56,8 @@ const int TPIC_COUNT = ceil(NUM_VALVES / 8) + 1;
 const int FLUSH_VALVE_NUM = 0;
 // variable to keep track of if any valves are open
 volatile bool valveOpen = false;
-uint8_t valveNum = 0;  // number of valve relative to current module
+uint8_t valveNum = 0;  // valve number to keep track of
+uint8_t currValve = 0; // valve number that is currently being operated - needed to deal with flush vs. sample valves
 int value = 0; // Place to accumulate valve number input (see SerialCommandDefs tab)
 byte msg;
 int valvePlace;
@@ -63,7 +74,7 @@ const byte DATA_PIN = 11; // SPI MOSI pin 11
 // Declare Valve Functions
 //----------------------------
 void everythingOff();
-void openValve(uint8_t currValve);
+void openValve();
 void closeValves();
 void setPump(signed int ms);
 
