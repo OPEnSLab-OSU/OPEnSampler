@@ -50,6 +50,7 @@ import static android.content.ContentValues.TAG;
  */
 
 public class BluetoothService extends Service {
+    //variables for managing bluetooth
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private String mBluetoothDeviceAddress;

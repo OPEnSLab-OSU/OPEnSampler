@@ -93,9 +93,9 @@ public class PhoneFragment extends Fragment {
             addPhoneNumber = (TextView) view.findViewById(R.id.addMessage);
 
         //Similar Functionality to ScheduleFragment.java
-        submitPhoneAdd.setEnabled(false);
-        submitPhoneDelete.setEnabled(false);
-        submitPhoneUpdate.setEnabled(false);
+        //submitPhoneAdd.setEnabled(false);
+        //submitPhoneDelete.setEnabled(false);
+        //submitPhoneUpdate.setEnabled(false);
 
         //Similar to how ScheduleFragment hide and showed different forms depending on the dropdown
         phoneNumbers.setVisibility(view.INVISIBLE);
@@ -168,7 +168,7 @@ public class PhoneFragment extends Fragment {
                 MainActivity xxx = (MainActivity)getActivity();
                 mService = xxx.mainService;
                 String pnumber = phoneAdd.getText().toString();
-                String message = "W" + pnumber;
+                String message = "W0, " + pnumber;
                 byte[] value;
                 try{
                     //send message

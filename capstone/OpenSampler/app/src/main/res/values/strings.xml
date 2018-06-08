@@ -13,9 +13,8 @@
     </string-array>
 
     <string-array name="phoneNumbers">
-        <item>5033829015</item>
         <item>1234567890</item>
-        <item>4518746587</item>
+        <item>9876543210</item>
     </string-array>
 
     <string-array name="valveNums">
