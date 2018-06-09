@@ -242,10 +242,6 @@ void loop()
       Serial.println(F("Total number of samples reached! Sleeping forever..."));
       // Because wakeup pin is disabled above, sleep forever, no wakeup from here
 
-#if FONA_ENABLED
-      sendSMSAll((const char *) F("OPEnSampler says: HELLO WORLD"));
-#endif
-
       sleepEN = true; // Set sleep flag to sleep at end of loop
     }
     else

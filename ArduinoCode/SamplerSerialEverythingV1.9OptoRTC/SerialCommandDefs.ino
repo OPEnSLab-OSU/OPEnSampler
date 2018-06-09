@@ -231,9 +231,7 @@ void listenForSerial()
        * SD <milliseconds>
        *
        * Set the sample duration, or the time in milliseconds that the pump runs
-       * when taking a single sample.
-       *
-       * SD
+       * when taking a single sample
        *
        * Prints the sample duration (in milliseconds) to Serial.
        */
