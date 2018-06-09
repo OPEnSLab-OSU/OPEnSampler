@@ -13,13 +13,15 @@ import opensampler.opensampler.R;
  */
 
 public class PuppetActivity extends AppCompatActivity {
-
+    //Simple sets all the required functionality
     private static final String TAG = "PuppetActivity";
+
+    //Enabled when Fragment is created
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.puppet_activity_layout);
-        Log.d(TAG, "onCreate: Started.");
+        setContentView(R.layout.puppet_activity_layout); //Sets the layout to puppet_activity_layout.xml
+        Log.d(TAG, "onCreate: Started."); //Basic Tag
     }
 }
 

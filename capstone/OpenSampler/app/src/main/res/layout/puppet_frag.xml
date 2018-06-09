@@ -5,14 +5,6 @@
     android:layout_height="match_parent"
     android:background="@color/colorPrimary">
 
-    <Button
-        android:id="@+id/timeSelectorActivity"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:text="Go to Puppet Activity" />
-
     <TextView
         android:id="@+id/motorMess"
         android:layout_width="wrap_content"
@@ -80,12 +72,14 @@
         </Spinner>
 
         <Button
+            android:id="@+id/valveOpen"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Open"
-            android:layout_marginLeft="10dp"/>
+            android:layout_marginLeft="10dp"
+            android:text="Open" />
 
         <Button
+            android:id="@+id/valveClose"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Close" />
