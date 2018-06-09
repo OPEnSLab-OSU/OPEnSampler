@@ -36,6 +36,7 @@ public class PhoneFragment extends Fragment {
     private static final int count = 10;
     protected String[] mDataset;
 
+    //Variables for all the spinners and buttons
     private Spinner phoneMenu;
     private Spinner phoneNumbers;
 
@@ -91,11 +92,6 @@ public class PhoneFragment extends Fragment {
             phoneNumberMsg = (TextView) view.findViewById(R.id.phoneNumberMsg);
             newNumber = (TextView) view.findViewById(R.id.numberToChange);
             addPhoneNumber = (TextView) view.findViewById(R.id.addMessage);
-
-        //Similar Functionality to ScheduleFragment.java
-        //submitPhoneAdd.setEnabled(false);
-        //submitPhoneDelete.setEnabled(false);
-        //submitPhoneUpdate.setEnabled(false);
 
         //Similar to how ScheduleFragment hide and showed different forms depending on the dropdown
         phoneNumbers.setVisibility(view.INVISIBLE);
@@ -165,6 +161,7 @@ public class PhoneFragment extends Fragment {
         submitPhoneAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v){
+                //set a listener to the add phone button, takes the number stored in the text box and sends it
                 MainActivity xxx = (MainActivity)getActivity();
                 mService = xxx.mainService;
                 String pnumber = phoneAdd.getText().toString();
@@ -183,17 +180,29 @@ public class PhoneFragment extends Fragment {
         submitPhoneDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v){
-
+                //set a listener to the delete phone button, simply clears out the index with all zeroes
+                MainActivity xxx = (MainActivity)getActivity();
+                mService = xxx.mainService;
+                String message = "W0, 0000000000";
+                byte[] value;
+                try{
+                    //send message
+                    value = message.getBytes("UTF-8");
+                    mService.writeRXCharacteristic(value);
+                }catch (UnsupportedEncodingException e){
+                    e.printStackTrace();
+                }
             }
         });
 
         submitPhoneUpdate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v){
+                //set a listener on the update button, similar to add it just overwrites the phone number at the specified index with a new one
                 MainActivity xxx = (MainActivity)getActivity();
                 mService = xxx.mainService;
                  String pnumber = phoneUpdate.getText().toString();
-                 String message = "U" + pnumber;
+                 String message = "w0, " + pnumber;
                 byte[] value;
                 try{
                     //send message

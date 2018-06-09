@@ -289,34 +289,37 @@ public class ScheduleFragment extends Fragment {
         msubmitSched.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v){
+                //temp gets the value of the spinner and is either equal to periodic or daily
                 temp = schedMenu.getSelectedItem().toString();
                 if(temp.equals("Periodic")){
+                    //if the type is periodic then craft the packet starting with the period length then sample length and then flush duration
                     String type = "Periodic";
                     String minutes = periodLengthPeriodic.getText().toString();
                     String sampLen = sampleLengthPeriodic.getText().toString();
                     String flushDur = flushDurationPeriodic.getText().toString();
+                    //P stands for period length followed by a value in minutes, S stands for sample length followed by a value in seconds and F stands for flush duration followed by a length in seconds
                     String message = "P" + minutes + "|S" + sampLen + "|F" + flushDur;
                     byte[] value;
                     try{
                         //send message
                         value = message.getBytes("UTF-8");
                         mService.writeRXCharacteristic(value);
-
                         //update log
                         String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
                         listAdapter.add("["+currentDateTimeString+"] TX: " + "Periodic");
-                        //messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
-                        //edtMessage.setText("");
                     }catch (UnsupportedEncodingException e){
                         e.printStackTrace();
                     }
                 }
                 if(temp.equals("Daily")){
+                    //if the type is daily then craft the packet starting with the starting hour and starting minute followed by flush duration and sample length
+                    // S stands for sample length followed by a value in seconds and F stands for flush duration followed by a length in seconds
                     String type = "Daily";
                     String hour = startingHour.getText().toString();
                     String minutes = startingMin.getText().toString();
                     String flushDur = flushDurationDaily.getText().toString();
                     String sampLen = sampleLengthDaily.getText().toString();
+                    //D stands for day and expects the hour and minute in military time,
                     String message = "D" + hour + "," + minutes  + "|F" + flushDur  + "|S" + sampLen;
                     byte[] value;
                     try{
@@ -335,15 +338,19 @@ public class ScheduleFragment extends Fragment {
                 }
             }
         });
+
+        //listener for the connect button
         btnConnect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v){
+                //first checks if bluetooth is enabled
                 if (!mBtAdapter.isEnabled()) {
                     Log.i(TAG, "onClick - BT not enabled yet");
                     Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                     startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
                 }
                 else {
+                    //make sure that there isnt already a connection
                     if (btnConnect.getText().equals("Connect")){
 
                         //Connect button pressed, open DeviceListActivity class, with popup windows that scan for devices
