@@ -1,0 +1,3 @@
+Arduino Code is included in this folder. Download the latest version. All previous versions included for documentation and educational
+purposes.
+Also be sure to download the libraries folder. Place this into the Arduino/Libraries folder (restart the Arduino IDE if open).

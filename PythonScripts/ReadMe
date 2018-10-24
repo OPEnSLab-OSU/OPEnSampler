@@ -1,0 +1,7 @@
+The Included Python Scripts are examples of using the serial puppet string commands to automate customized sampler functions.
+For these to work, ensure:
+Arduino Serial Monitor is closed - only one thing can have the arduino Serial port's attention (in this case, we want it to be Python)
+Ensure Sampler is Powered on and Mode switch is toggled to Program Mode
+Ensure the Port and Baud rate are correctly defined in the Python script and correspondes to the same port the Arduino is communicating on. Look for this line:
+ser = serial.Serial('/dev/cu.usbmodem1411', 115200)
+
