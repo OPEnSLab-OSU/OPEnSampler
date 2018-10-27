@@ -7,7 +7,7 @@
 #include <Arduino.h>
 class TimeSpan;
 
-
+#define _BV(bit) (1 << (bit))
 #define PCF8523_ADDRESS              0x68
 #define PCF8523_CLKOUTCONTROL        0x0F
 #define PCF8523_CONTROL_3            0x02

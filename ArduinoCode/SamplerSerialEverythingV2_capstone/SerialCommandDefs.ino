@@ -37,7 +37,7 @@
     Set the next valve/bag to sample into. This value is stored persistently, so operation can resume after power failure.
     This can be used to reset the valve count before each new deployment, or manually skip to a bag.
 
-  Pupet-String Commands:
+  Puppet-String Commands:
 
   VS <valve number> <valve state>
     Turn valve on/off (starting at 1, V0 is flush valve). # is 1 for on (open) and 0 for off (close)
@@ -45,6 +45,8 @@
   M <direction value>
     Turn motor on (in forward or reverse) and off. <direction value> is 0 for off, 1 to draw water into sampler, -1 to draw water out of sampler
     example: M 1 will begin drawing water into sampler
+  O
+    turns everything off
 
   You may use Arduino IDE, Python, or other software to send timed sequences to sampler.
     Example: V0 1 followed by M 1  will begin flush. The sequence (press return where you see / ) V0 0 / V1 1 / M 1  will disable flush and draw water into bag 1.
@@ -267,6 +269,10 @@ void listenForSerial()
         {
           Serial.println(F("ERROR: Next valve number must be a positive value."));
           break;
+        }
+        else
+        {
+          Serial.print(F("Valve number set to: ")); Serial.println(valveNumber);
         }
 
         // The valve number is decremented before storing because it will be

@@ -58,7 +58,7 @@ Likewise, turning off all valves (including flush valve) will automatically shut
 #include <Wire.h>              // i2c connection for RTC DS3231
 #include <RTClibExtended.h>    // Library to configure DS3231
 #include "LowPower.h"          // Use Low-Power library from Sparkfun and RTC pin interrupt (P3) to manage sleep and scheduling at same time
-#include <EEPROM.h>            // Will be writing params to non-volatile memory to save between uses
+//#include <EEPROM.h>            // Will be writing params to non-volatile memory to save between uses
 #include <SPI.h>               // Using SPI hardware to communicate with TPICs
 
 #include "CommandParser.h"
