@@ -1,11 +1,16 @@
+//TimeFunctions
+
 // ======= BOARD SPECIFIC SETTINGS ======
 
 //NOTE: Must include the following line in the RTClibExtended.h file to use with M0:
 //#define _BV(bit) (1 << (bit))
 #include <RTClibExtended.h>
+#include <LowPower.h>
 
 #define EI_NOTEXTERNAL
 #include <EnableInterrupt.h>
+
+//#include "Definitions.h"
 
 // ======== General Settings ==========
 
@@ -32,16 +37,16 @@ void setClock(unsigned int year, unsigned int month, unsigned int day, unsigned 
 {
   RTC.adjust(DateTime(year, month, day, hour, minute, 0));
 
-  if (config.getMode() == Mode::PERIODIC)
-    config.refreshPeriodicAlarm();
-  else if (config.getMode() == Mode::DAILY)
-    RTC.setAlarm(ALM1_MATCH_HOURS, config.getSampleMinute(), config.getSampleHour(), 0);
+  if (configInst.getMode() == Mode::PERIODIC)
+    configInst.refreshPeriodicAlarm();
+  else if (configInst.getMode() == Mode::DAILY)
+    RTC.setAlarm(ALM1_MATCH_HOURS, configInst.getSampleMinute(), configInst.getSampleHour(), 0);
 
   RTCReportTime(); // print current RTC time
   Serial.print(F("Next Sample Alarm set for: "));
-  Serial.print(config.getSampleHour());
+  Serial.print(configInst.getSampleHour());
   Serial.print(F(":"));
-  Serial.println(config.getSampleMinute());
+  Serial.println(configInst.getSampleMinute());
 }
 
 // ================================================================
@@ -163,7 +168,7 @@ void setAlarmPeriod()
   DateTime now = RTC.now(); // Check the current time
 
   // Calculate new time
-  configData.sampleAlarmMinute = (now.minute() + configData.periodicAlarmMinutes) % 60; // wrap-around using modulo every 60 sec
+  configData.sampleAlarmMinute = (now.minute() + configInst.periodicAlarmMinutes) % 60; // wrap-around using modulo every 60 sec
   configData.sampleAlarmHr  = (now.hour() + ((now.minute() + configData.periodicAlarmMinutes) / 60)) % 24; // quotient of now.min+periodMin added to now.hr, wraparound every 24hrs
 
   Serial.print(F("Resetting Alarm 1 for: ")); Serial.print(configData.sampleAlarmHr); Serial.print(F(":")); Serial.println(configData.sampleAlarmMinute);

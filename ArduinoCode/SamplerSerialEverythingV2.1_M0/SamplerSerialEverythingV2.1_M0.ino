@@ -12,7 +12,6 @@
   CommandParser.cpp
   CommandParser.h
   Configuration.cpp
-  Configuration.h
   Definitions.h
   Flash.h
   Globals.h
@@ -91,14 +90,14 @@
 #include <Arduino.h>  // for type definitions
 #include <FlashStorage.h>
 
-#include "Definitions.h" //where everything is defined
-#include "SampleFunctions.h" //functions for sampler operations
-#include "CommandParser.h"
-#include "Configuration.h"
 #include "Globals.h"
+#include "Definitions.h" //where everything is defined
 #include "Flash.h"
+#include "CommandParser.h"
+#include "SampleFunctions.h" //functions for sampler operations
 
-configuration config;
+// create instance of configClass
+configClass configInst;
 
 // create instance of SamplerFunctions
 SamplerFunctions funcLibrary;
@@ -131,7 +130,7 @@ void setup()
   pinMode(PUMP_PIN2, OUTPUT); // Set motor pin2 to output
   digitalWrite(PUMP_PIN2, LOW); // Turn off Motor
 
-  if (configuration.getWritten())
+  if (configInst.getWritten())
   {
     writeNonVolatileDefaults();
   }
@@ -153,15 +152,15 @@ void setup()
 #endif
 
   Serial.print(F("The current main line flush duration in ms is: "));
-  Serial.println(config.getFlushDuration());
+  Serial.println(configInst.getFlushDuration());
   Serial.print(F("The current bag flush duration in ms is: "));
-  Serial.println(config.getBagFlushDuration());
+  Serial.println(configInst.getBagFlushDuration());
   Serial.print(F("The current bag draw duration in ms is: "));
-  Serial.println(config.getBagDrawDuration());
+  Serial.println(configInst.getBagDrawDuration());
   Serial.print(F("The current sample duration in ms is: "));
-  Serial.println(config.getSampleDuration());
+  Serial.println(configInst.getSampleDuration());
   Serial.print(F("Next bag to sample is: "));
-  Serial.println((config.getValveNumber() + 1)); // add 1 to this number for the actual bag number
+  Serial.println((configInst.getValveNumber() + 1)); // add 1 to this number for the actual bag number
 
   // Enable and Config SPI hardware:
   pinMode(RCLOCK, OUTPUT);
@@ -170,18 +169,18 @@ void setup()
 
 
   // Now set alarm based on mode flag (daily or periodic)
-  if (config.getMode() == Mode::DAILY)
+  if (configInst.getMode() == Mode::DAILY)
   {
     //Set alarm1 every day at Hr:Mn
     // You may use different Alarm types for different periods (e.g. ALM1_MATCH_MINUTES to go off every hr)
     // RTC.setAlarm(ALM1_MATCH_MINUTES, configuration.SAMin, 0, 0); // This might work to go off every hour at specified minute every hour
-    RTC.setAlarm(ALM1_MATCH_HOURS, config.getSampleMinute(), config.getSampleHour(), 0);
+    RTC.setAlarm(ALM1_MATCH_HOURS, configInst.getSampleMinute(), configInst.getSampleHour(), 0);
     Serial.print(F("The current sample alarm set for daily at "));
-    Serial.print(config.getSampleHour()); Serial.print(F(":")); Serial.println(config.getSampleMinute());
+    Serial.print(configInst.getSampleHour()); Serial.print(F(":")); Serial.println(configInst.getSampleMinute());
   }
-  else if (config.getMode() == Mode::PERIODIC)
+  else if (configInst.getMode() == Mode::PERIODIC)
   {
-    config.refreshPeriodicAlarm();
+    configInst.refreshPeriodicAlarm();
   }
   // Reset pump and all valves to off
   Serial.println(F("Resetting electronics . . ."));
@@ -207,7 +206,7 @@ void loop()
     timer = millis();
     timeEN = false;
 
-    if (config.getValveNumber() >= numValves) // If target valve number is greater than total number of desired valves
+    if (configInst.getValveNumber() >= numValves) // If target valve number is greater than total number of desired valves
     {
       Serial.println(F("Total number of samples reached!"));
       Serial.println(F("Sleeping forever, bye!"));
@@ -233,15 +232,15 @@ void loop()
       //clear the alarm
       clearAlarms();
       //set alarm for next cycle
-      if (config.getMode() == Mode::DAILY)
+      if (configInst.getMode() == Mode::DAILY)
       {
-        RTC.setAlarm(ALM1_MATCH_HOURS, config.getSampleMinute(), config.getSampleHour(), 0);
+        RTC.setAlarm(ALM1_MATCH_HOURS, configInst.getSampleMinute(), configInst.getSampleHour(), 0);
         Serial.print(F("Resetting alarm for next day at "));
-        Serial.print(config.getSampleHour()); Serial.print(F(":")); Serial.println(config.getSampleMinute());
+        Serial.print(configInst.getSampleHour()); Serial.print(F(":")); Serial.println(configInst.getSampleMinute());
       }
-      else if (config.getMode() == Mode::PERIODIC)
+      else if (configInst.getMode() == Mode::PERIODIC)
       {
-        config.refreshPeriodicAlarm();
+        configInst.refreshPeriodicAlarm();
       }
     }
   }

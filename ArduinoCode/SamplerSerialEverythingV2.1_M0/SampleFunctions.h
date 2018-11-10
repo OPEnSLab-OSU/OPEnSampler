@@ -19,15 +19,15 @@ class SamplerFunctions {
     }
     void doAction2_NextValve ()
     {
-      configClass.valveNumber++;
-      Serial.print(F("Valve number advanced to: ")); Serial.println(configClass.valveNumber);
+      configData.valveNumber++;
+      Serial.print(F("Valve number advanced to: ")); Serial.println(configData.valveNumber);
     }
     void doAction3_OpenValve ()
     {
-      Serial.print ("Opening valve number "); Serial.println(configClass.valveNumber);
+      Serial.print ("Opening valve number "); Serial.println(configData.valveNumber);
       delay(100);
       valvePrint = true;
-      currValve = configClass.valveNumber;
+      currValve = configData.valveNumber;
       openValve();
     }
     void doAction4_PumpOut ()
@@ -42,7 +42,7 @@ class SamplerFunctions {
     }
 	void doAction6_TakeSample ()
     {
-      	  Serial.print(F("Taking a water sample in valve ")); Serial.println(configClass.valveNumber); 
+      	  Serial.print(F("Taking a water sample in valve ")); Serial.println(configData.valveNumber); 
       setPump(1);
 	  #if FONA_ENABLED
 		sendSMSAll((const char *) F("OPEnSampler says: Taking a sample!"));

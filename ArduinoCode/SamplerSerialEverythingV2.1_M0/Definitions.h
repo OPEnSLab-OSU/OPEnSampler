@@ -1,3 +1,5 @@
+//Definitions.h
+
 /*Arduino Pinouts:
   GPIO2   - Sample enable/disable low-true
   GPIO3   - RTC Interrupt, low-true
@@ -12,8 +14,7 @@
 */
 
 #include <Arduino.h>  // for type definitions
-//#include "Globals.h"
-#include "Configuration.h"
+#include <stdint.h>
 
 // Instance of config to holding device current configuration
 //struct config_flash_t configuration;
@@ -90,12 +91,14 @@ const uint16_t FlushDurMsDef = 10000; // Factory default, low long in ms to flus
 const uint16_t BagFlushDurMsDef = 5000; //Factory default
 const uint16_t BagDrawDurMsDef = 1000; //Factory default
 const uint8_t SampleVolMlDef = 250;  // Factory Default, sample vol in ml, 250ml takes about 2min, or about 480ms per ml (pump version 1)
-const bool SampleValveNumDef = 0; // Factory Default, current valve number
-const int FLUSH_VALVE_NUM = 0;
+const bool SampleValveNumDef = 1; // Factory Default, current valve number
+const int FlushValveNumDef = 0;
 
 const uint8_t MIN_FUNC_TIME = 100;
 
 const uint32_t baud = 115200; // BAUD rate for USB serial (when debugging ensure serial monitor matches)
+
+enum class Mode {DAILY, PERIODIC};
 
 /* --------------------
    Phone Number Storage
@@ -115,6 +118,75 @@ const uint8_t phoneNumberLength = 11;
 
 #define FONA_ENABLED true
 #define BLE_ENABLEd false
+
+//Configuration
+
+// Values are stored in a struct within the Configuration class to make them easy to copy to/from flash
+struct config_flash_t {
+  uint8_t sampleAlarmMinute; // Minute to take a sample
+  uint8_t sampleAlarmHour;   // Hour   to take a sample
+  uint16_t periodicAlarmMinutes; // Time (in minutes) between samples in Periodic mode
+  unsigned long flushDurationMs; // How long to perform a flush of main line (in milliseconds)
+  unsigned long bagFlushDurationMs; // How long to perform a flush of individual bag (in milliseconds)
+  unsigned long bagDrawDurationMs; // How long to perform a draw of individual bag (in milliseconds)
+  unsigned long sampleDurationMs; // How long to draw a sample (in milliseconds)
+  unsigned long sampleVolumeMl; // How big is the bag (in mL)
+  uint8_t valveNumber; // Current number of valves sampled, 0=reset/default
+  uint8_t flushValveNumber; // Number for flush valve
+  bool written; // Has flash been written to?
+  Mode mode; // Daily or Periodic sample timer
+  char SMSNumbers[numSMSRecipients][phoneNumberLength + 1]; // Phone numbers for SMS status update recipients
+  byte checksum;                 // Value is changed when flash memory is written to.
+//  uint8_t     instance_number;          // Default 0, should be set on startup from a patch
+//  char        packet_header_string[80]; // String of expected packet header (dynamically formed based on config.h)
+};
+
+/**
+   Stores OPEnSampler's configuration values
+   Storing configuration in this class (as opposed to global struct like in earlier iterations) ensures these
+   values are accessed/updated/validated consistently.
+*/
+class configClass
+{
+  public:
+    void setDefaults();
+
+    void getConfigData(uint8_t data[]);
+
+    void setDailyAlarm(unsigned int hour, unsigned int minute);
+
+    void setPeriodicAlarm(unsigned int minutes);
+    void refreshPeriodicAlarm();
+
+    void setMode(Mode mode);
+    void setWritten(bool written);
+    void setSampleDuration(unsigned long milliseconds);
+    void setFlushDuration(unsigned long milliseconds);
+    void setBagFlushDuration(unsigned long milliseconds);
+    uint8_t setSampleHour(unsigned int hour);
+    uint8_t setSampleMinute(unsigned int minute);
+    void setSMSNumber(int index, char *buffer);
+    void setValveNumber(unsigned int valveNumber);
+
+    Mode getMode();
+    bool getWritten();
+    unsigned long getFlushDuration();
+    unsigned long getBagFlushDuration();
+    unsigned long getBagDrawDuration()
+    unsigned long getSampleDuration();
+    uint8_t getSampleHour();
+    uint8_t getSampleMinute();
+    char * getSMSNumber(int index);
+    uint16_t getPeriodicAlarmLength();
+    uint8_t getValveNumber();
+
+    void read_non_volatile();
+    void write_non_volatile();
+
+  private:
+    // This is stored as a struct so it can be easily written to flash.
+    config_flash_t configData;
+};
 
 //----------------------------
 // Function action and time arrays
@@ -141,13 +213,13 @@ short myProgram[] =
 // during a sample condition, see action library in SampleFunctions.h
 uint16_t myTimes[] =
 {
-  MIN_FUNC_TIME, configClass.getFlushDuration(), MIN_FUNC_TIME,
-  MIN_FUNC_TIME, 1, configClass.getBagFlushDuration(), configClass.getBagDrawDuration(), MIN_FUNC_TIME,
-  MIN_FUNC_TIME, configClass.getFlushDuration(), MIN_FUNC_TIME,
-  MIN_FUNC_TIME, 1, configClass.getBagFlushDuration(), configClass.getBagDrawDuration(), MIN_FUNC_TIME,
-  MIN_FUNC_TIME, configClass.getFlushDuration(), MIN_FUNC_TIME,
-  MIN_FUNC_TIME, configClass.getBagDrawDuration(),
-  configClass.getSampleDuration(), MIN_FUNC_TIME
+  MIN_FUNC_TIME, FlushDurMsDef, MIN_FUNC_TIME,
+  MIN_FUNC_TIME, 1, BagFlushDurMsDef, BagDrawDurMsDef, MIN_FUNC_TIME,
+  MIN_FUNC_TIME, FlushDurMsDef, MIN_FUNC_TIME,
+  MIN_FUNC_TIME, 1, BagFlushDurMsDef, BagDrawDurMsDef, MIN_FUNC_TIME,
+  MIN_FUNC_TIME, FlushDurMsDef, MIN_FUNC_TIME,
+  MIN_FUNC_TIME, BagDrawDurMsDef,
+  SampleDurMsDef, MIN_FUNC_TIME
 };
 
 //----------------------------
@@ -200,7 +272,7 @@ void listenForSerial();
 void print_countdown();
 void InitializeRTC();
 void interrupt_reset();
-void print_DateTime(DateTime time);
+//void print_DateTime(DateTime time);
 void wakeUp();
 void sampleEN();
 void setAlarmPeriod();

@@ -1,7 +1,8 @@
-#include "Configuration.h"
-#include "Globals.h"
-#include "Flash.h"
+//Configuration.cpp
+
+//#include "Globals.h"
 #include "Definitions.h"
+//#include "Flash.h"
 
 /**
    Overwrite config with default values.
@@ -292,7 +293,7 @@ uint8_t configClass::getValveNumber()
 /**
    Copy the configuration data stored in flash to the Configuration class's storage
 */
-void configClass::readFromFLASH()
+void configClass::read_non_volatile()
 {
   read_non_volatile();//(0, configData);
 }
@@ -300,7 +301,7 @@ void configClass::readFromFLASH()
 /**
    Write the configuration data from the Configuration class's storage to flash
 */
-void configClass::writeToFLASH()
+void configClass::write_non_volatile()
 {
   write_non_volatile();//(0, configData);
   setWritten(true);

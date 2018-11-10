@@ -1,6 +1,7 @@
+//CommandParser.h
 #pragma once
 
-#include "Configuration.h"
+#include "Definitions.h"
 
 /**
    Parses and executes valid commands

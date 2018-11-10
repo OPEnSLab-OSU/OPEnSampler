@@ -1,6 +1,8 @@
+//StatusUpdates
+
 #if FONA_ENABLED
 
-#include "Globals.h"
+//#include "Globals.h"
 
 // https://github.com/adafruit/Adafruit_FONA/blob/master/examples/FONAtest/FONAtest.ino#L269
 enum NetworkStatus { NOT_REGISTERED           = 0,

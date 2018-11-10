@@ -1,12 +1,15 @@
+//CommandParser.cpp
+
 #include <errno.h>
 #include <string.h>
+#include <Arduino.h>
 
 #include "CommandParser.h"
-#include "Globals.h"
+//#include "Globals.h"
 #include "Definitions.h"
-#include "PumpValveFunctions.h"
+//#include "PumpValveFunctions.h"
 
-extern void sendConfigOverBluetooth(configuration config);
+extern void sendConfigOverBluetooth(configClass configInst);
 extern void setClock(uint16_t year, uint16_t month, uint16_t day, uint16_t hour, uint16_t minute);
 extern void write_non_volatile();
 
@@ -124,7 +127,7 @@ bool CommandParser::execute(char identifier, char *args[], size_t args_size) con
   switch (identifier)
   {
     case 'B':
-      sendConfigOverBluetooth(config);
+      sendConfigOverBluetooth(configData);
       break;
 
     case 'C':
@@ -138,7 +141,7 @@ bool CommandParser::execute(char identifier, char *args[], size_t args_size) con
       if (args_size < 2 || !stringsToIntegers(int_args, args, args_size))
         return false;
 
-      config.setDailyAlarm(int_args[0], int_args[1]);
+      configInst.setDailyAlarm(int_args[0], int_args[1]);
       break;
 
     case 'F':
@@ -151,14 +154,14 @@ bool CommandParser::execute(char identifier, char *args[], size_t args_size) con
         return false;
       }
 
-      config.setFlushDuration(milliseconds);
+      configInst.setFlushDuration(milliseconds);
       break;
 
     case 'G':
       if (args_size < 1 || !stringsToIntegers(int_args, args, args_size))
         return false;
 
-      str = config.getSMSNumber(int_args[0]);
+      str = configInst.getSMSNumber(int_args[0]);
 
       if (str)
         Serial.println(str);
@@ -185,7 +188,7 @@ bool CommandParser::execute(char identifier, char *args[], size_t args_size) con
       if (args_size < 1 || !stringsToIntegers(int_args, args, args_size))
         return false;
 
-      config.setPeriodicAlarm(int_args[0]);
+      configInst.setPeriodicAlarm(int_args[0]);
       break;
 
     case 'R':
@@ -196,7 +199,7 @@ bool CommandParser::execute(char identifier, char *args[], size_t args_size) con
       if (args_size < 1 || !stringsToIntegers(int_args, args, args_size))
         return false;
 
-      config.setSampleDuration(int_args[0]);
+      configInst.setSampleDuration(int_args[0]);
       break;
 
     case 'U':
@@ -215,7 +218,7 @@ bool CommandParser::execute(char identifier, char *args[], size_t args_size) con
         return false;
       }
 
-      config.setValveNumber(int_args[0] - 1);
+      configInst.setValveNumber(int_args[0] - 1);
       break;
 
     case 'W':
@@ -228,7 +231,7 @@ bool CommandParser::execute(char identifier, char *args[], size_t args_size) con
         return false;
       }
 
-      config.setSMSNumber(n, args[1]);
+      configInst.setSMSNumber(n, args[1]);
       break;
 
     default:

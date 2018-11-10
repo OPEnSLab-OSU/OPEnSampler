@@ -1,3 +1,5 @@
+//Bluetooth.cpp
+
 #include "Adafruit_BLE_UART.h"
 
 extern Adafruit_BLE_UART BLESerial;
@@ -58,13 +60,13 @@ void RXCallback(uint8_t *buffer, uint8_t length)
 /**
    Send configuration data struct over Bluetooth Low Energy.
 */
-void sendConfigOverBluetooth(configuration config)
+void sendConfigOverBluetooth(configClass configInst)
 {
   const size_t bytesToSend = sizeof(config_flash_t);
   size_t totalSent = 0;
   uint8_t configData[bytesToSend];
 
-  config.getConfigData(configData);
+  configInst.getConfigData(configData);
 
   while (totalSent < bytesToSend) {
     size_t sent = 0;
