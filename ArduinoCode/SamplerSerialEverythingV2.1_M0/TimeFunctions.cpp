@@ -10,12 +10,6 @@
 #define EI_NOTEXTERNAL
 #include <EnableInterrupt.h>
 
-//#include "Definitions.h"
-
-// ======== General Settings ==========
-
-RTC_DS3231 RTC_DS; //instance of DS3231 RTC
-
 // ================================================================
 // RTC
 // ================================================================

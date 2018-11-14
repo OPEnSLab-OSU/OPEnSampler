@@ -3,9 +3,9 @@
 
 enum class pumpState { ON, OFF, REVERSE };
 
-extern const byte pumpPin1;
-extern const byte pumpPin2;
-
+//----------------------------
+// Declare Valve Functions
+//----------------------------
 void closeValves();
 void openValve();
 void everythingOff();

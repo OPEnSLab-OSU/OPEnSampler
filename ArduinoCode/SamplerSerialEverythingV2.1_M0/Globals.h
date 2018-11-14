@@ -9,7 +9,7 @@
 
 #include "Adafruit_BLE_UART.h" // Library for nRF8001 (BLE breakout)
 #include "Adafruit_FONA.h"     // Library for FONA 808 (GSM/SMS breakout)
-#include <SoftwareSerial.h>    // Needed for FONA 808
+//#include <SoftwareSerial.h>    // Needed for FONA 808
 #include <RTClibExtended.h>    // Library for DS3231 Real Time Clock (RTC)
 
 extern configClass configInst; // Configuration data (stored persistently)

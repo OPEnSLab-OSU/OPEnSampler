@@ -92,7 +92,10 @@
 
 #include "Globals.h"
 #include "Definitions.h" //where everything is defined
+#include "Configuration.h"
 #include "Flash.h"
+#include "PumpValveFunctions.h"
+#include "Bluetooth.h"
 #include "CommandParser.h"
 #include "SampleFunctions.h" //functions for sampler operations
 
@@ -104,6 +107,28 @@ SamplerFunctions funcLibrary;
 
 // Make Instance of Timer
 AsyncDelay delayTimer;
+
+//instance of DS3231 RTC
+RTC_DS3231 RTC_DS; 
+
+
+//----------------------------------
+// Bluetooth Serial & Command Parser
+//----------------------------------
+#if BLE_ENABLED
+CommandParser BLEParser(',', '|');
+Adafruit_BLE_UART BLESerial = Adafruit_BLE_UART(bleReqPin, bleRdyPin, bleRstPin);
+#endif
+
+//--------------------------------
+// FONA 808 for SMS Status Updates
+//--------------------------------
+#if FONA_ENABLED
+SoftwareSerial fonaSS = SoftwareSerial(fonaTXPin, fonaRXPin);
+SoftwareSerial *fonaSerial = &fonaSS;
+Adafruit_FONA fona = Adafruit_FONA(fonaRstPin);
+#endif
+//--------------------------------
 
 void setup()
 {

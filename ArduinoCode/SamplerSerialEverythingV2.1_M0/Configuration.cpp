@@ -1,8 +1,6 @@
 //Configuration.cpp
 
-//#include "Globals.h"
-#include "Definitions.h"
-//#include "Flash.h"
+#include "Configuration.h"
 
 /**
    Overwrite config with default values.

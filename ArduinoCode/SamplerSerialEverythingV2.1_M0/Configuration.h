@@ -28,6 +28,7 @@ class configClass
     void setSampleDuration(unsigned long milliseconds);
     void setFlushDuration(unsigned long milliseconds);
     void setBagFlushDuration(unsigned long milliseconds);
+    void setBagDrawDuration(unsigned long milliseconds);
     uint8_t setSampleHour(unsigned int hour);
     uint8_t setSampleMinute(unsigned int minute);
     void setSMSNumber(int index, char *buffer);

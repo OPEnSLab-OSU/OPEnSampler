@@ -1,6 +1,7 @@
 //Bluetooth.cpp
-
-#include "Adafruit_BLE_UART.h"
+#if BLE_ENABLED
+#include <Adafruit_BLE_UART.h>
+#include "Bluetooth.h"
 
 extern Adafruit_BLE_UART BLESerial;
 
@@ -64,7 +65,7 @@ void sendConfigOverBluetooth(configClass configInst)
 {
   const size_t bytesToSend = sizeof(config_flash_t);
   size_t totalSent = 0;
-  uint8_t configData[bytesToSend];
+  uint8_t configData[bytesToSend]; ///is this the right reference
 
   configInst.getConfigData(configData);
 
@@ -80,3 +81,4 @@ void sendConfigOverBluetooth(configClass configInst)
     }
   }
 }
+#endif

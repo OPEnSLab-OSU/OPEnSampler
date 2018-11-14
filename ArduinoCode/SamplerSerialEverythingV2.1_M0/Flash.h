@@ -5,8 +5,6 @@
 // ================================================================
 #include <FlashStorage.h>
 #include <RTClibExtended.h>	// from sparkfun low power library found here https://github.com/FabioCuomo/FabioCuomo-DS3231/
-//#include "Definitions.h"
-//#include "Globals.h"
 
 // ================================================================
 // ===                   FUNCTION PROTOTYPES                    ===

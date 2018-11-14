@@ -1,9 +1,9 @@
 //PumpValveFunctions.cpp
 
 #include <Arduino.h>
-#include "Definitions.h"
-//#include "Globals.h"
 #include "PumpValveFunctions.h"
+
+
 
 #include <SPI.h>        // Using SPI hardware to communicate with TPICs
 

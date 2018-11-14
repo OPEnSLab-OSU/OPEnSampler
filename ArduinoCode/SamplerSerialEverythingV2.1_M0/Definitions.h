@@ -16,9 +16,6 @@
 #include <Arduino.h>  // for type definitions
 #include <stdint.h>
 
-// Instance of config to holding device current configuration
-//struct config_flash_t configuration;
-
 //----------------------------
 // Pins
 //----------------------------
@@ -28,7 +25,13 @@ const byte WAKEUP_PIN = 12;
 
 const byte PUMP_PIN1 = 8; // Motor MOSFET attached to digital pin 9,  1=forward, 0=reverse
 const byte PUMP_PIN2 = 9; // Motor MOSFET attached to digital pin 10 0=forward, 1=reverse
-const byte rClockPin = 10; // TPIC register clock pin, acts as SPI CS (chip select)
+
+//----------------------------
+// SPI Variables
+//----------------------------
+const byte SCLOCK = 13; // SPI SCK pin 13 - Not used in code
+const byte RCLOCK = 10; // Register clock pin, acts as CS, could be moved to SPI SS pin 10?
+const byte DATA_PIN = 11; // SPI MOSI pin 11 - Not used in code
 
 //----------------------------
 // Bluetooth Pins & Serial
@@ -49,29 +52,10 @@ const byte fonaRstPin = 4;
 #define memValidationValue 99
 //#define INIT_INST 1
 
-//----------------------------------
-// Bluetooth Serial & Command Parser
-//----------------------------------
-#if BLE_ENABLED
-CommandParser BLEParser(',', '|');
-Adafruit_BLE_UART BLESerial = Adafruit_BLE_UART(bleReqPin, bleRdyPin, bleRstPin);
-#endif
-
-//--------------------------------
-// FONA 808 for SMS Status Updates
-//--------------------------------
-#if FONA_ENABLED
-SoftwareSerial fonaSS = SoftwareSerial(fonaTXPin, fonaRXPin);
-SoftwareSerial *fonaSerial = &fonaSS;
-Adafruit_FONA fona = Adafruit_FONA(fonaRstPin);
-#endif
-//--------------------------------
-
 //--------------------------------
 // Real Time Clock
 //--------------------------------
 
-//RTC_DS3231 RTC;
 volatile int  count = 10; 		//number of seconds to wait before running loop()
 unsigned long timer;
 #define EI_NOTEXTERNAL
@@ -116,7 +100,7 @@ const uint8_t numSMSRecipients = 5;
 // Maximum number of digits in a phone number
 const uint8_t phoneNumberLength = 11;
 
-#define FONA_ENABLED true
+#define FONA_ENABLED false
 #define BLE_ENABLEd false
 
 //Configuration
@@ -139,53 +123,6 @@ struct config_flash_t {
   byte checksum;                 // Value is changed when flash memory is written to.
 //  uint8_t     instance_number;          // Default 0, should be set on startup from a patch
 //  char        packet_header_string[80]; // String of expected packet header (dynamically formed based on config.h)
-};
-
-/**
-   Stores OPEnSampler's configuration values
-   Storing configuration in this class (as opposed to global struct like in earlier iterations) ensures these
-   values are accessed/updated/validated consistently.
-*/
-class configClass
-{
-  public:
-    void setDefaults();
-
-    void getConfigData(uint8_t data[]);
-
-    void setDailyAlarm(unsigned int hour, unsigned int minute);
-
-    void setPeriodicAlarm(unsigned int minutes);
-    void refreshPeriodicAlarm();
-
-    void setMode(Mode mode);
-    void setWritten(bool written);
-    void setSampleDuration(unsigned long milliseconds);
-    void setFlushDuration(unsigned long milliseconds);
-    void setBagFlushDuration(unsigned long milliseconds);
-    uint8_t setSampleHour(unsigned int hour);
-    uint8_t setSampleMinute(unsigned int minute);
-    void setSMSNumber(int index, char *buffer);
-    void setValveNumber(unsigned int valveNumber);
-
-    Mode getMode();
-    bool getWritten();
-    unsigned long getFlushDuration();
-    unsigned long getBagFlushDuration();
-    unsigned long getBagDrawDuration()
-    unsigned long getSampleDuration();
-    uint8_t getSampleHour();
-    uint8_t getSampleMinute();
-    char * getSMSNumber(int index);
-    uint16_t getPeriodicAlarmLength();
-    uint8_t getValveNumber();
-
-    void read_non_volatile();
-    void write_non_volatile();
-
-  private:
-    // This is stored as a struct so it can be easily written to flash.
-    config_flash_t configData;
 };
 
 //----------------------------
@@ -246,21 +183,6 @@ int value = 0; // Place to accumulate valve number input (see SerialCommandDefs 
 signed int directionMotor = 0; // 0=off, 1=draw water in, -1=pull water out
 int valvePlace;
 int currTPIC;
-
-//----------------------------
-// SPI Variables
-//----------------------------
-const byte SCLOCK = 13; // SPI SCK pin 13 - Not used in code
-const byte RCLOCK = 10; // Register clock pin, acts as CS, could be moved to SPI SS pin 10?
-const byte DATA_PIN = 11; // SPI MOSI pin 11 - Not used in code
-
-//----------------------------
-// Declare Valve Functions
-//----------------------------
-void everythingOff();
-void openValve();
-void closeValves();
-void setPump(signed int ms);
 
 //----------------------------
 // Declare Other Functions

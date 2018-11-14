@@ -5,9 +5,8 @@
 #include <Arduino.h>
 
 #include "CommandParser.h"
-//#include "Globals.h"
-#include "Definitions.h"
-//#include "PumpValveFunctions.h"
+
+configClass configInst
 
 extern void sendConfigOverBluetooth(configClass configInst);
 extern void setClock(uint16_t year, uint16_t month, uint16_t day, uint16_t hour, uint16_t minute);
@@ -120,7 +119,7 @@ bool CommandParser::execute(char identifier, char *args[], size_t args_size) con
 {
   unsigned int int_args[args_size];
   unsigned long milliseconds;
-  pumpState state;
+  pumpState(state);
   int n;
   char * str;
 
