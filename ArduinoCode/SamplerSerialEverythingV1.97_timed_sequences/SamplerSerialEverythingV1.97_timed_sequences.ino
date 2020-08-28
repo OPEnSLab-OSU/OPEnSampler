@@ -1,13 +1,9 @@
 /*
   OPEnS Water sampler Firmware Version 1.97
-  Chet Udell, Mitch Nelke, Cara Walter, 2018
+  Chet Udell, Mitch Nelke, Cara Walter, 2020
 
   New in this version:
   Added prime (flush system with water, then air)
-
-    To Do:
-    Add OLED Menu with Buttons to program sampler in-field and see status
-    Add GSM for live updates
 
   Saving Sampler params in EEPROM, include files from here:
   http://playground.arduino.cc/Code/EEPROMWriteAnything
@@ -16,16 +12,19 @@
   SerialCommandDefs.ino
   SamplerFunctions.h
   TimerFun.ino
+  SampleSequence.ino
 
   Dependencies:
 
-  You may need to download RTCLibExtended:
+  You will need to download:
+  
+  RTCLibExtended:
   https://github.com/FabioCuomo/FabioCuomo-DS3231
 
-  And Sparkfun Low Power Library:
+  Sparkfun Low Power Library:
   https://github.com/rocketscream/Low-Power/archive/master.zip
 
-  Include Timer Library from here:
+  Timer Library:
   https://github.com/stevemarple/AsyncDelay/
 
   RTC and RTCLib-extended tutorial/reference:

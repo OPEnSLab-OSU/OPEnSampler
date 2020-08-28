@@ -1,3 +1,5 @@
+// Sequence of actions and timing for each sample
+
 void sampleSeq()
 {
   programCounter = 0;
@@ -6,7 +8,7 @@ void sampleSeq()
   myProgram[0] = 1; myTimes[0] = MIN_FUNC_TIME; //open flush valve
   myProgram[1] = 5; myTimes[1] = configuration.FDMs; //pump water in
   myProgram[2] = 0; myTimes[2] = MIN_FUNC_TIME; //turn everything off
-  //flush vertical
+  //flush vertical offshoot - check timing to make sure no water is getting into bottle
   myProgram[3] = 4; myTimes[3] = MIN_FUNC_TIME; //reverse pump
   myProgram[4] = 3; myTimes[4] = 1; //open valve
   myProgram[5] = 5; myTimes[5] = configuration.BFDMs; //forward pump to flush vertical
@@ -16,7 +18,7 @@ void sampleSeq()
   myProgram[8] = 1; myTimes[8] = MIN_FUNC_TIME; //open flush valve
   myProgram[9] = 5; myTimes[9] = configuration.FDMs; //pump water in - set time by amount of tubing for pump
   myProgram[10] = 0; myTimes[10] = MIN_FUNC_TIME; //turn everything off
-  //flush vertical
+  //flush vertical offshoot - check timing to make sure no water is getting into bottle
   myProgram[11] = 4; myTimes[11] = MIN_FUNC_TIME; //reverse pump
   myProgram[12] = 3; myTimes[12] = 1; //open valve
   myProgram[13] = 5; myTimes[13] = configuration.BFDMs; //forward pump to flush vertical
@@ -26,7 +28,7 @@ void sampleSeq()
   myProgram[16] = 1; myTimes[16] = MIN_FUNC_TIME; //open flush valve
   myProgram[17] = 5; myTimes[17] = configuration.FDMs; //pump water in - set time by amount of tubing for pump
   myProgram[18] = 0; myTimes[18] = MIN_FUNC_TIME; //turn everything off
-  // clear vertical and empty bag of air
+  // clear vertical
   myProgram[19] = 4; myTimes[19] = MIN_FUNC_TIME; //reverse pump
   myProgram[20] = 3; myTimes[20] = configuration.BDDMs; //open valve
   //take sample
